@@ -41,8 +41,6 @@ playlist_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.c
 
 unique_tracks = playlist_scrape_lookup['track_id'].unique().tolist()
 
-#requests.get(BASE_URL + 'audio-features/4pt5fDVTg5GhEvEtlz9dKk', headers=headers).json()
-
 # Create batches of 99 from unique_tracks to pass to the API for rate limit efficiency
 def split(input_list, batch_size):
     for i in range(0, len(unique_tracks), batch_size):
@@ -52,11 +50,9 @@ batch_size = 99
 
 unique_tracks_for_api = list(split(unique_tracks, batch_size))
 
-unique_tracks_for_api = unique_tracks_for_api[0:2] # get rid of this after testing
-
 update_dttm = datetime.datetime.now()
 
-# function to pull audio features into dictionary
+# Function to pull audio features into dictionary
 def get_audio_features(feat):
     track_list = dict()
     for track in feat['audio_features']:
@@ -77,7 +73,7 @@ def get_audio_features(feat):
                                   }
     return track_list
 
-
+# Pull audio features using track dict and write/append to file
 for track_id_list in unique_tracks_for_api:
     req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
     feat = req.json()
