@@ -54,70 +54,41 @@ unique_tracks_for_api = list(split(unique_tracks, batch_size))
 
 unique_tracks_for_api = unique_tracks_for_api[0:2] # get rid of this after testing
 
-# function to pull audio features
+update_dttm = datetime.datetime.now()
+
+# function to pull audio features into dictionary
 def get_audio_features(feat):
-    track_list = []
+    track_list = dict()
     for track in feat['audio_features']:
-        track_l = []
-        track_l.append(track['id'])
-        track_l.append(track['danceability'])
-        track_l.append(track['energy'])
-        track_l.append(track['key'])
-        track_l.append(track['loudness'])
-        track_l.append(track['mode'])
-        track_l.append(track['speechiness'])
-        track_l.append(track['acousticness'])
-        track_l.append(track['instrumentalness'])
-        track_l.append(track['liveness'])
-        track_l.append(track['valence'])
-        track_l.append(track['tempo'])
-        track_l.append(track['duration_ms'])
-        track_l.append(track['time_signature'])
-        track_list.append(track_l)
+        track_list[track['id']] = {'danceability' : track['danceability'], 
+                                   'energy' : track['energy'],
+                                   'key' : track['key'],
+                                   'loudness' : track['loudness'],
+                                   'mode' : track['mode'],
+                                   'speechiness' : track['speechiness'],
+                                   'acousticness' : track['acousticness'],
+                                   'instrumentalness' : track['instrumentalness'],
+                                   'liveness' : track['liveness'],
+                                   'valence' : track['valence'],
+                                   'tempo' : track['tempo'],
+                                   'duration_ms' : track['duration_ms'],
+                                   'time_signature' : track['time_signature'],
+                                   'update_dttm' : update_dttm
+                                  }
     return track_list
 
-## Need to create lists of 100 (api max) ids each to pass them in all at once and iterate through
+
 for track_id_list in unique_tracks_for_api:
     req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
     feat = req.json()
-    audio_features_list = get_audio_features(feat)
-    audio_features_df = pd.DataFrame(audio_features_list, columns=(['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms','time_signature']))
+    audio_features_df = pd.DataFrame.from_dict(get_audio_features(feat), orient='index')
+    audio_features_df.index.name = 'id'
+    audio_features_df.reset_index(inplace=True)
 
 if exists(file_path + 'lookups\\track_audio_features.csv') is False:
     audio_features_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
+
 else:
     existing_audio_features_lookup = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-
-
-
-#audio_features_df = pd.DataFrame(audio_features_list, columns=(['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms','time_signature']))
-#audio_features_df
-
-
-# steps
-# write out a file, if it doesn't exist
-#     if it does, append
-# if id already exists in file, don't write it (maybe update?)
-
-
-
-
-# if exists(file_path + 'lookups\\track_audio_features.csv') is False:
-#     audio_features_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
-
-
-
-
-#     f_name = str(track_df['capture_dttm'][0].date())
-#     track_df.to_csv(file_path + 'playlist_data\\' + f_name + '.csv', index=False)
-#     track_df.to_csv(file_path + 'playlist_data\\playlist_data.csv', mode='a',header=False, index=False)  
-
-
-
-# if 200 == requests.get(BASE_URL + 'audio-features/' + '0gplL1WMoJ6iYaPgMCL0gX', headers=headers):
-#     print('ya')
-
-
-
-# req = requests.get(BASE_URL + 'audio-features/' + '0gplL1WMoJ6iYaPgMCL0gX', headers=headers)
-# req.status_code
+    new_recs = audio_features_df[~audio_features_df['id'].isin(existing_audio_features_lookup['id'])]
+    new_recs.to_csv(file_path + 'lookups\\track_audio_features.csv', mode='a',header=False, index=False)
