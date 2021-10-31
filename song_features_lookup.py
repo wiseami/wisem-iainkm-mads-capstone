@@ -2,8 +2,10 @@ import requests
 import pandas as pd
 import datetime
 import os
+from os.path import exists
 import time
 import json
+import itertools
 
 with open('credentials.json') as creds:
     credentials = json.load(creds)
@@ -39,33 +41,76 @@ playlist_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.c
 
 unique_tracks = playlist_scrape_lookup['track_id'].unique().tolist()
 
-audio_features_list = []
-for t_id in unique_tracks:
-    feat = requests.get(BASE_URL + 'audio-features/' + t_id, headers=headers).json()
+#requests.get(BASE_URL + 'audio-features/4pt5fDVTg5GhEvEtlz9dKk', headers=headers).json()
+
+# Create batches of 99 from unique_tracks to pass to the API for rate limit efficiency
+def split(input_list, batch_size):
+    for i in range(0, len(unique_tracks), batch_size):
+        yield input_list[i:i + batch_size]
+
+batch_size = 99
+
+unique_tracks_for_api = list(split(unique_tracks, batch_size))
+
+unique_tracks_for_api = unique_tracks_for_api[0:2] # get rid of this after testing
+
+# function to pull audio features
+def get_audio_features(feat):
     track_list = []
-    track_list.append(feat['id'])
-    track_list.append(feat['danceability'])
-    track_list.append(feat['energy'])
-    track_list.append(feat['key'])
-    track_list.append(feat['loudness'])
-    track_list.append(feat['mode'])
-    track_list.append(feat['speechiness'])
-    track_list.append(feat['acousticness'])
-    track_list.append(feat['instrumentalness'])
-    track_list.append(feat['liveness'])
-    track_list.append(feat['valence'])
-    track_list.append(feat['tempo'])
-    track_list.append(feat['duration_ms'])
-    track_list.append(feat['time_signature'])
-    audio_features_list.append(track_list)
+    for track in feat['audio_features']:
+        track_l = []
+        track_l.append(track['id'])
+        track_l.append(track['danceability'])
+        track_l.append(track['energy'])
+        track_l.append(track['key'])
+        track_l.append(track['loudness'])
+        track_l.append(track['mode'])
+        track_l.append(track['speechiness'])
+        track_l.append(track['acousticness'])
+        track_l.append(track['instrumentalness'])
+        track_l.append(track['liveness'])
+        track_l.append(track['valence'])
+        track_l.append(track['tempo'])
+        track_l.append(track['duration_ms'])
+        track_l.append(track['time_signature'])
+        track_list.append(track_l)
+    return track_list
 
-audio_features_df = pd.DataFrame(audio_features_list, columns=(['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms','time_signature']))
-audio_features_df
+## Need to create lists of 100 (api max) ids each to pass them in all at once and iterate through
+for track_id_list in unique_tracks_for_api:
+    req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
+    feat = req.json()
+    audio_features_list = get_audio_features(feat)
+    audio_features_df = pd.DataFrame(audio_features_list, columns=(['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms','time_signature']))
+
+if exists(file_path + 'lookups\\track_audio_features.csv') is False:
+    audio_features_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
+else:
+    existing_audio_features_lookup = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
 
 
-    f_name = str(track_df['capture_dttm'][0].date())
-    track_df.to_csv(file_path + 'playlist_data\\' + f_name + '.csv', index=False)
-    track_df.to_csv(file_path + 'playlist_data\\playlist_data.csv', mode='a',header=False, index=False)  
+
+#audio_features_df = pd.DataFrame(audio_features_list, columns=(['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms','time_signature']))
+#audio_features_df
+
+
+# steps
+# write out a file, if it doesn't exist
+#     if it does, append
+# if id already exists in file, don't write it (maybe update?)
+
+
+
+
+# if exists(file_path + 'lookups\\track_audio_features.csv') is False:
+#     audio_features_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
+
+
+
+
+#     f_name = str(track_df['capture_dttm'][0].date())
+#     track_df.to_csv(file_path + 'playlist_data\\' + f_name + '.csv', index=False)
+#     track_df.to_csv(file_path + 'playlist_data\\playlist_data.csv', mode='a',header=False, index=False)  
 
 
 
