@@ -81,10 +81,10 @@ for track_id_list in unique_tracks_for_api:
     audio_features_df.index.name = 'id'
     audio_features_df.reset_index(inplace=True)
 
-if exists(file_path + 'lookups\\track_audio_features.csv') is False:
-    audio_features_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
+    if exists(file_path + 'lookups\\track_audio_features.csv') is False:
+        audio_features_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
 
-else:
-    existing_audio_features_lookup = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-    new_recs = audio_features_df[~audio_features_df['id'].isin(existing_audio_features_lookup['id'])]
-    new_recs.to_csv(file_path + 'lookups\\track_audio_features.csv', mode='a',header=False, index=False)
+    else:
+        existing_audio_features_lookup = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
+        new_recs = audio_features_df[~audio_features_df['id'].isin(existing_audio_features_lookup['id'])]
+        new_recs.to_csv(file_path + 'lookups\\track_audio_features.csv', mode='a',header=False, index=False)

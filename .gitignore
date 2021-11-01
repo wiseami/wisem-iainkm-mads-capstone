@@ -8,6 +8,7 @@ credentials.json
 playlist_data/old
 playlist_scrape.bat
 song_features_lookup.bat
+local_scripts_for_scheduling
 
 # C extensions
 *.so
