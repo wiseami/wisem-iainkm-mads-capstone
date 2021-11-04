@@ -9,6 +9,8 @@ playlist_data/old
 playlist_scrape.bat
 song_features_lookup.bat
 local_scripts_for_scheduling
+*.ppk
+*.pem
 
 # C extensions
 *.so
@@ -134,3 +136,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+ec2-user@ec2-18-223-213-7.us-east-2.compute.amazonaws.com
