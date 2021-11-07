@@ -11,6 +11,7 @@ song_features_lookup.bat
 local_scripts_for_scheduling
 *.ppk
 *.pem
+EDA/audio
 
 # C extensions
 *.so
