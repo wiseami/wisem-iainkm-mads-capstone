@@ -5,6 +5,7 @@ import streamlit as st
 from streamlit_pandas_profiling import st_profile_report
 import requests
 import tqdm
+import altair as alt
 
 top_pl_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\lookups\\global_top_daily_playlists.csv")
 audio_features_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\lookups\\track_audio_features.csv")
@@ -46,7 +47,7 @@ res = res.drop(columns=['danceability_mean','energy_mean','key_mean','loudness_m
 ###################################
 
 profile = pp.ProfileReport(res,
-    configuration_file="pandas_profiling_minimal.yml" 
+    #configuration_file="pandas_profiling_minimal.yml" 
     # variables={
     #     "descriptions": {
     #         "danceability":"Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.",
@@ -71,14 +72,89 @@ profile = pp.ProfileReport(res,
 
 st.set_page_config(layout="wide")
 st.title('Pandas Profiling in Streamlit')
-st.write(res)
-st_profile_report(profile)
+st.write('this is a test')
+st.header('Top 5 Songs Based on number of playlist appearances')
+st.write('While the first day of scraping playlists came back with 3,450 total songs, only about half of those were unique. Because of that, we have tons of tracks that show up on multiple playlists.')
+df = pd.DataFrame(playlist_data_df.groupby(['track_name', 'track_artist','track_id'])['country'].count().sort_values(ascending=False).reset_index()).head()
+df.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
+st.table(df)
+#st.dataframe(res)
+#st_profile_report(profile)
+# st.metric(
+#     'Song with most playlist appearances',
+#     str(df['Track Name'][0])
+#     #int(df['# Playlist Appearances'][0])
+# )
+
+st.write(
+    "Wow, I didn't realize **" 
+    + df['Artist'][0] 
+    + "** was so popular across the world! I wonder if they're hit song **" 
+    + df['Track Name'][0] 
+    + "** just came out? Let's take a look at the song attributes."
+)
+
+st.dataframe(audio_features_df[audio_features_df['id'] == df['Track ID'][0]], height=200)
+
+
+# feature_names = ['danceability','energy','key','loudness','mode','speechiness','acousticness',
+#                 'instrumentalness','liveness','valence','tempo', 'duration_ms', 'country']
+
+# df_feat = merged[feature_names]
+
+# charts = []
+# for feat in feature_names:
+
+#     charts.append(alt.Chart(df_feat).transform_density(
+#         density=feat,
+#         groupby=['country']
+#     ).mark_line().encode(
+#         alt.X('value:Q'),
+#         alt.Y('density:Q'),
+#         alt.Color('country:N')
+#     ))
+
+# #alt.vconcat(*charts)
+
+# z = charts
+# st.altair_chart(alt.vconcat(*z))
 
 
 
 
 
+# alt.Chart(df_feat).transform_fold(
+#     feature_names,
+#     as_ = ['meas','value']
+# ).transform_density(
+#     density='value',
+#     groupby=['country']
+# ).mark_line().encode(
+#     alt.X('value:Q'),
+#     alt.Y('density:Q'),
+#     alt.Row('meas:N')
+# )  
+    
+    
 
+
+    
+    
+    
+    
+#     'danceability',
+#     as_=['danceability', 'density']
+# ).mark_line().encode(
+#     x='danceability:Q',
+#     y='density:Q'
+# )
+
+
+
+# import altair as alt
+# from vega_datasets import data
+
+# source = data.iris()
 
 
 ### this downloads mp3s from the preview
@@ -91,7 +167,6 @@ st_profile_report(profile)
 #     doc.content
 #     with open('audio/{}_{}.mp3'.format(idx, glob.loc[idx]['track_name'].replace('/', '_')), 'wb') as f:
 #         f.write(doc.content)
-
 
 
 
