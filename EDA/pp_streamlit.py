@@ -1,5 +1,5 @@
 import pandas as pd
-import pandas_profiling as pp
+# import pandas_profiling as pp
 # from pandas_profiling import ProfileReport
 import streamlit as st
 # from streamlit_pandas_profiling import st_profile_report
