@@ -8,18 +8,23 @@ import tqdm
 import altair as alt
 import os
 
-file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
+### Specify where you're running - mostly in place for working locally vs testing streamlit cloud
+run_os = 'lin'
+# run_os = 'lin'
 
-top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
-audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-playlist_data_df = pd.read_csv(file_path + '\\playlist_data\\2021-11-13.csv')
+if run_os == 'win':
+    file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
+    top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
+    audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
+    playlist_data_df = pd.read_csv(file_path + '\\playlist_data\\2021-11-13.csv')
+elif run_os == 'lin':
+    file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
+    top_pl_df = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
+    audio_features_df = pd.read_csv(file_path + 'lookups/track_audio_features.csv')
+    playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-13.csv')
 
-#top_pl_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\lookups\\global_top_daily_playlists.csv")
-#audio_features_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\lookups\\track_audio_features.csv")
-#playlist_data_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\playlist_data\\2021-11-13.csv")
-
+### Join some of the lookups together and drop unneeded columns
 merged = playlist_data_df.merge(audio_features_df, how='inner', left_on='track_id', right_on='id')
-#merged[merged['country']=='argentina']
 merged = merged.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id'])
 
 grouped = merged.groupby(by=['country'], as_index=False)
@@ -27,10 +32,10 @@ res = grouped.agg(['sum', 'count'])
 res.columns = list(map('_'.join, res.columns.values))
 res = res.reset_index()
 
+### Create Spotify audio features normalized for playlist length
 res = res.drop(columns=['danceability_count', 'energy_count', 'key_count', 'loudness_count', 'mode_count', 'speechiness_count', 'acousticness_count', 'instrumentalness_count', 'liveness_count', 'valence_count', 'tempo_count'])
 res = res.rename(columns = {'duration_ms_count':'track_count'})
 res['duration_m'] = res['duration_ms_sum'] / 1000 / 60
-#res['duration_m_mean'] = res['duration_ms_mean'] / 1000 / 60
 res['danceability'] = res['danceability_sum'] / res['duration_m']
 res['energy'] = res['energy_sum'] / res['duration_m']
 res['key'] = res['key_sum'] / res['duration_m']
@@ -44,10 +49,7 @@ res['valence'] = res['valence_sum'] / res['duration_m']
 res['tempo'] = res['tempo_sum'] / res['duration_m']
 
 res = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'update_dttm_sum', 'update_dttm_count', 'track_count','duration_m'])
-#res = res.drop(columns=['danceability_mean','energy_mean','key_mean','loudness_mean','mode_mean','speechiness_mean','acousticness_mean','instrumentalness_mean', 'liveness_mean','valence_mean','tempo_mean', 'duration_ms_mean'])
-#res
 
-#playlist_data_df[playlist_data_df['country']=='argentina']
 
 ################################### 
 # Pandas Profiling and Streamlit
