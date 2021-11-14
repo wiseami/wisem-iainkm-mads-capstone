@@ -1,8 +1,8 @@
 import pandas as pd
 # import pandas_profiling as pp
 # from pandas_profiling import ProfileReport
-import streamlit as st
 # from streamlit_pandas_profiling import st_profile_report
+import streamlit as st
 import requests
 import tqdm
 import altair as alt
@@ -144,6 +144,11 @@ cor_plot = base.mark_rect().encode(
 col1, col2 = st.columns(2)
 col1.write("Now, let's take country out of the equation and have a closer look at the different individual audio features and how they correlate with one another. In this case, we created an aggregate country-playlist value of each of the individual song audio features and normalized for total duration of the playlist.")
 col2.altair_chart(cor_plot + text, use_container_width=True)
+
+
+
+
+
 
 
 
