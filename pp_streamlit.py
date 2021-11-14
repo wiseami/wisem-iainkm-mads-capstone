@@ -6,10 +6,17 @@ import streamlit as st
 import requests
 import tqdm
 import altair as alt
+import os
 
-top_pl_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\lookups\\global_top_daily_playlists.csv")
-audio_features_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\lookups\\track_audio_features.csv")
-playlist_data_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\playlist_data\\2021-11-13.csv")
+file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
+
+top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
+audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
+playlist_data_df = pd.read_csv(file_path + '\\playlist_data\\2021-11-13.csv')
+
+#top_pl_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\lookups\\global_top_daily_playlists.csv")
+#audio_features_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\lookups\\track_audio_features.csv")
+#playlist_data_df = pd.read_csv("C:\\Users\\Mike\\Documents\\GitHub\\coursera\\wisem-iainkm-mads-capstone\\playlist_data\\2021-11-13.csv")
 
 merged = playlist_data_df.merge(audio_features_df, how='inner', left_on='track_id', right_on='id')
 #merged[merged['country']=='argentina']
@@ -46,7 +53,7 @@ res = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_s
 # Pandas Profiling and Streamlit
 ###################################
 
-profile = pp.ProfileReport(res,
+#profile = pp.ProfileReport(res,
     #configuration_file="pandas_profiling_minimal.yml" 
     # variables={
     #     "descriptions": {
@@ -67,7 +74,7 @@ profile = pp.ProfileReport(res,
     #     }
     # }
 
-)
+#)
 #profile.to_notebook_iframe()
 
 st.set_page_config(layout="wide")
