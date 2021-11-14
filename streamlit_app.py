@@ -7,17 +7,15 @@ import requests
 import tqdm
 import altair as alt
 import os
+import sys
 
 ### Specify where you're running - mostly in place for working locally vs testing streamlit cloud
-run_os = 'lin'
-# run_os = 'lin'
-
-if run_os == 'win':
+if sys.platform == 'win32':
     file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
     top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
     audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
     playlist_data_df = pd.read_csv(file_path + '\\playlist_data\\2021-11-13.csv')
-elif run_os == 'lin':
+else:
     file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     top_pl_df = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
     audio_features_df = pd.read_csv(file_path + 'lookups/track_audio_features.csv')
@@ -50,35 +48,7 @@ res['tempo'] = res['tempo_sum'] / res['duration_m']
 
 res = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'update_dttm_sum', 'update_dttm_count', 'track_count','duration_m'])
 
-
-################################### 
-# Pandas Profiling and Streamlit
-###################################
-
-#profile = pp.ProfileReport(res,
-    #configuration_file="pandas_profiling_minimal.yml" 
-    # variables={
-    #     "descriptions": {
-    #         "danceability":"Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.",
-    #         "energy":"Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.",
-    #         "key":"The key the track is in. Integers map to pitches using standard Pitch Class notation. E.g. 0 = C, 1 = C♯/D♭, 2 = D, and so on",
-    #         "loudness":"The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track and are useful for comparing relative loudness of tracks. Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.",
-    #         "mode":"Mode indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. Major is represented by 1 and minor is 0.",
-    #         "speechiness":"Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks.",
-    #         "acousticness":"A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic.",
-    #         "instrumentalness":"Predicts whether a track contains no vocals. ""Ooh"" and ""aah"" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly ""vocal"". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0.",
-    #         "liveness":"Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live.",
-    #         "valence":"A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).",
-    #         "tempo":"The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration.",
-    #         "duration_ms":"The duration of the track in milliseconds.",
-    #         "time_signature":"An estimated overall time signature of a track. The time signature (meter) is a notational convention to specify how many beats are in each bar (or measure)."
-
-    #     }
-    # }
-
-#)
-#profile.to_notebook_iframe()
-
+### Start building out Streamlit assets
 st.set_page_config(layout="wide")
 st.title('Spotify Streamlit')
 st.write('this is a test')
@@ -88,13 +58,6 @@ st.write('While the first day of scraping playlists came back with 3,450 total s
 df = pd.DataFrame(playlist_data_df.groupby(['track_name', 'track_artist','track_id'])['country'].count().sort_values(ascending=False).reset_index()).head()
 df.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
 st.table(df)
-#st.dataframe(res)
-
-# st.metric(
-#     'Song with most playlist appearances',
-#     str(df['Track Name'][0])
-#     #int(df['# Playlist Appearances'][0])
-# )
 
 st.write(
     "Wow, I didn't realize **" 
@@ -183,42 +146,43 @@ col1.write("Now, let's take country out of the equation and have a closer look a
 col2.altair_chart(cor_plot + text, use_container_width=True)
 
 
+
+
+
+
+################################### 
+# Pandas Profiling and Streamlit
+###################################
+
+#profile = pp.ProfileReport(res,
+    #configuration_file="pandas_profiling_minimal.yml" 
+    # variables={
+    #     "descriptions": {
+    #         "danceability":"Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.",
+    #         "energy":"Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.",
+    #         "key":"The key the track is in. Integers map to pitches using standard Pitch Class notation. E.g. 0 = C, 1 = C♯/D♭, 2 = D, and so on",
+    #         "loudness":"The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track and are useful for comparing relative loudness of tracks. Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.",
+    #         "mode":"Mode indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. Major is represented by 1 and minor is 0.",
+    #         "speechiness":"Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks.",
+    #         "acousticness":"A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic.",
+    #         "instrumentalness":"Predicts whether a track contains no vocals. ""Ooh"" and ""aah"" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly ""vocal"". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0.",
+    #         "liveness":"Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live.",
+    #         "valence":"A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).",
+    #         "tempo":"The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration.",
+    #         "duration_ms":"The duration of the track in milliseconds.",
+    #         "time_signature":"An estimated overall time signature of a track. The time signature (meter) is a notational convention to specify how many beats are in each bar (or measure)."
+
+    #     }
+    # }
+
+#)
+#profile.to_notebook_iframe()
 #st_profile_report(profile)
 
 
 
-
-
-
-
-
-
-
-
-
-### this downloads mp3s from the preview
-# glob = playlist_data_df.iloc[0:50]
-# glob = glob[glob['track_preview_url'].notnull()].reset_index(drop=True)
-
-
-# for idx, url in enumerate(glob['track_preview_url']):
-#     doc = requests.get(url)
-#     doc.content
-#     with open('audio/{}_{}.mp3'.format(idx, glob.loc[idx]['track_name'].replace('/', '_')), 'wb') as f:
-#         f.write(doc.content)
-
-
-
-
-
-
-
-
-
-
-
 #########
-# density plots
+# density plots matplotlib
 #########
 # import numpy as np
 # import pandas as pd
