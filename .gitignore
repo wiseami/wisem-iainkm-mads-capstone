@@ -12,6 +12,7 @@ local_scripts_for_scheduling
 *.ppk
 *.pem
 EDA/audio
+.idea
 
 # C extensions
 *.so
