@@ -23,6 +23,7 @@ AUTH_URL = 'https://accounts.spotify.com/api/token'
 #     'client_secret': credentials['CLIENT_SECRET'],
 # })
 
+# uses secrets.toml for Streamlit
 auth_response = requests.post(AUTH_URL, {
     'grant_type': 'client_credentials',
     'client_id': st.secrets['spotify_credentials']['CLIENT_ID'],
@@ -49,12 +50,14 @@ if sys.platform == 'win32':
     file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
     top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
     audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-    playlist_data_df = pd.read_csv(file_path + '\\playlist_data\\2021-11-13.csv')
+    playlist_data_df = pd.read_csv(file_path + 'playlist_data\\2021-11-14.csv')
+    global_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
 else:
     file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     top_pl_df = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
     audio_features_df = pd.read_csv(file_path + 'lookups/track_audio_features.csv')
     playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-13.csv')
+    global_lookup = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
 
 ### Join some of the lookups together and drop unneeded columns
 merged = playlist_data_df.merge(audio_features_df, how='inner', left_on='track_id', right_on='id')
@@ -95,6 +98,7 @@ st.write("While the first day of scraping playlists came back with 3,450 total s
 df = pd.DataFrame(playlist_data_df.groupby(['track_name', 'track_artist','track_id'])['country'].count().sort_values(ascending=False).reset_index()).head()
 df.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
 df['img_url'] = np.nan
+df.is_copy = False
 
 col1, col2, col3 = st.columns(3)
 for id in df['Track ID']:
@@ -102,23 +106,21 @@ for id in df['Track ID']:
     search = search.json()
     df['img_url'][df['Track ID']==id] = (search['album']['images'][0]['url'])
 
-col1.markdown('**' + df['Artist'][0] + " - " + df['Track Name'][0] + '**')
 col1.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][0]))
+col1.markdown('**' + df['Artist'][0] + " - " + df['Track Name'][0] + '**')
 col1.image(df['img_url'][0])
 if pd.isna(playlist_data_df[df['Track ID'][0]==playlist_data_df['track_id']]['track_preview_url'].iloc[0]) == False:
     col1.audio(playlist_data_df[df['Track ID'][0]==playlist_data_df['track_id']]['track_preview_url'].iloc[0])
 
-col2.markdown('**' + df['Artist'][1] + " - " + df['Track Name'][1] + '**')
 col2.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][1]))
+col2.markdown('**' + df['Artist'][1] + " - " + df['Track Name'][1] + '**')
 col2.image(df['img_url'][1])
-
 if pd.isna(playlist_data_df[df['Track ID'][1]==playlist_data_df['track_id']]['track_preview_url'].iloc[1]) == False:
     col2.audio(playlist_data_df[df['Track ID'][1]==playlist_data_df['track_id']]['track_preview_url'].iloc[1])
 
-col3.markdown('**' + df['Artist'][2] + " - " + df['Track Name'][2] + '**')
 col3.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][2]))
+col3.markdown('**' + df['Artist'][2] + " - " + df['Track Name'][2] + '**')
 col3.image(df['img_url'][2])
-
 if pd.isna(playlist_data_df[df['Track ID'][2]==playlist_data_df['track_id']]['track_preview_url'].iloc[2]) == False:
     col3.audio(playlist_data_df[df['Track ID'][2]==playlist_data_df['track_id']]['track_preview_url'].iloc[2])
 
