@@ -13,6 +13,7 @@ local_scripts_for_scheduling
 *.pem
 EDA/audio
 .idea
+.streamlit/secrets.toml
 
 # C extensions
 *.so
@@ -139,3 +140,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 ec2-user@ec2-18-223-213-7.us-east-2.compute.amazonaws.com
+.streamlit/secrets.toml

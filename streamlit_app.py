@@ -17,10 +17,16 @@ with open('credentials.json') as creds:
 
 AUTH_URL = 'https://accounts.spotify.com/api/token'
 
+# auth_response = requests.post(AUTH_URL, {
+#     'grant_type': 'client_credentials',
+#     'client_id': credentials['CLIENT_ID'],
+#     'client_secret': credentials['CLIENT_SECRET'],
+# })
+
 auth_response = requests.post(AUTH_URL, {
     'grant_type': 'client_credentials',
-    'client_id': credentials['CLIENT_ID'],
-    'client_secret': credentials['CLIENT_SECRET'],
+    'client_id': st.secrets['spotify_credentials']['CLIENT_ID'],
+    'client_secret': st.secrets['spotify_credentials']['CLIENT_SECRET'],
 })
 
 auth_response_data = auth_response.json()
