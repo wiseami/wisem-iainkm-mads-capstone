@@ -12,8 +12,8 @@ import json
 import numpy as np
 
 ### Spotify info
-with open('credentials.json') as creds:
-    credentials = json.load(creds)
+#with open('credentials.json') as creds:
+#    credentials = json.load(creds)
 
 AUTH_URL = 'https://accounts.spotify.com/api/token'
 
