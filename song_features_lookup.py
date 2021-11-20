@@ -34,7 +34,6 @@ BASE_URL = 'https://api.spotify.com/v1/'
 
 # Read in our csv lookup with all 69 Daily Song Charts
 file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
-playlist_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
 
 playlist_scrape_lookup = pd.read_csv(file_path + 'playlist_data\\playlist_data.csv')
 playlist_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
@@ -46,7 +45,7 @@ def split(input_list, batch_size):
     for i in range(0, len(unique_tracks), batch_size):
         yield input_list[i:i + batch_size]
 
-batch_size = 99
+batch_size = 49
 
 unique_tracks_for_api = list(split(unique_tracks, batch_size))
 
@@ -73,6 +72,17 @@ def get_audio_features(feat):
                                   }
     return track_list
 
+def get_track_info(feat):
+    track_list = dict()
+    for track in feat['tracks']:
+        track_list[track['id']] = {'name': track['name'],
+                                   'artist': track['artists'][0]['name'],
+                                   'album_img': track['album']['images'][0]['url'],
+                                   #'artist_img': track['artists'][0]['images'][0]['url'],
+                                   'preview_url': track['preview_url']
+                                  }
+    return track_list
+
 # Pull audio features using track dict and write/append to file
 for track_id_list in unique_tracks_for_api:
     req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
@@ -81,10 +91,18 @@ for track_id_list in unique_tracks_for_api:
     audio_features_df.index.name = 'id'
     audio_features_df.reset_index(inplace=True)
 
+    req = requests.get(BASE_URL + 'tracks?ids=' + (','.join(track_id_list)), headers=headers)
+    feat = req.json()
+    track_info_df = pd.DataFrame.from_dict(get_track_info(feat), orient='index')
+    track_info_df.index.name = 'id'
+    track_info_df.reset_index(inplace=True)
+
+    final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
+
     if exists(file_path + 'lookups\\track_audio_features.csv') is False:
-        audio_features_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
+        final_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
 
     else:
         existing_audio_features_lookup = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-        new_recs = audio_features_df[~audio_features_df['id'].isin(existing_audio_features_lookup['id'])]
+        new_recs = final_df[~final_df['id'].isin(existing_audio_features_lookup['id'])]
         new_recs.to_csv(file_path + 'lookups\\track_audio_features.csv', mode='a',header=False, index=False)

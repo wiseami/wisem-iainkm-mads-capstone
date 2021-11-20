@@ -1,3 +1,4 @@
+from altair.utils.schemapi import SchemaValidationError
 import pandas as pd
 # import pandas_profiling as pp
 # from pandas_profiling import ProfileReport
@@ -50,13 +51,13 @@ if sys.platform == 'win32':
     file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
     top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
     audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-    playlist_data_df = pd.read_csv(file_path + 'playlist_data\\2021-11-14.csv')
+    playlist_data_df = pd.read_csv(file_path + 'playlist_data\\2021-11-17.csv')
     global_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
 else:
     file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     top_pl_df = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
     audio_features_df = pd.read_csv(file_path + 'lookups/track_audio_features.csv')
-    playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-13.csv')
+    playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-17.csv')
     global_lookup = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
 
 ### Join some of the lookups together and drop unneeded columns
@@ -165,6 +166,10 @@ col1, col2 = st.columns([1,2])
 col1.markdown('**Loudness** - The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track and are useful for comparing relative loudness of tracks. Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.')
 col2.altair_chart(charts[3], use_container_width=True)
 
+col1, col2 = st.columns([1,2])
+col1.markdown('**Valence** - A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).')
+col2.altair_chart(charts[9], use_container_width=True)
+
 
 st.markdown('---')
 st.header('Correlations')
@@ -197,14 +202,157 @@ cor_plot = base.mark_rect().encode(
     color=alt.Color('correlation:Q', scale=alt.Scale(scheme='greenblue'))
 )
 
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([1,2])
 col1.write("Now, let's take country out of the equation and have a closer look at the different individual audio features and how they correlate with one another. In this case, we created an aggregate country-playlist value of each of the individual song audio features and normalized for total duration of the playlist.")
 col2.altair_chart(cor_plot + text, use_container_width=True)
 
+audio_feat_dict = {
+    "Acousticness":"A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic.",
+    "Danceability":"Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.",
+    "Energy":"Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.",
+    "Instrumentalness":"Predicts whether a track contains no vocals. ""Ooh"" and ""aah"" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly ""vocal"". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0.",
+    "Key":"The key the track is in. Integers map to pitches using standard Pitch Class notation. E.g. 0 = C, 1 = C♯/D♭, 2 = D, and so on.",
+    "Liveness":"Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live.",
+    "Loudness":"The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track and are useful for comparing relative loudness of tracks. Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.",
+    "Mode":"Mode indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. Major is represented by 1 and minor is 0.",
+    "Speechiness":"Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks.",
+    "Tempo":"The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration.",
+    "Valence":"A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry)."    
+    }
+
+with st.expander("Audio feature definitions"):
+    for k in audio_feat_dict:
+        st.markdown('**' + k +'** - ' + audio_feat_dict[k])
+    col1,col2 = st.columns([3,1])
+    col2.markdown("Source: [Spotify's API documentation.](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-audio-features)")
+
+st.write("It looks like there are a handful of audio features that have high correlations with others.")
+
+
+
+st.markdown('---')
+st.write('testing recommendation... right now it picks the predefined Adele song on left, runs cossim against others in our set, comes back with top 5 most similar')
+
+
+from sklearn.metrics.pairwise import cosine_similarity
+kmeans_df = audio_features_df.drop(columns=['update_dttm', 'time_signature'])
+#kmeans_df.id = pd.Categorical(kmeans_df.id)
+#kmeans_df['id'] = kmeans_df.id.cat.codes
+kmeans_df_y = kmeans_df.id
+kmeans_df = kmeans_df.drop(columns=['id','duration_ms','tempo'])
+
+compare0 = kmeans_df.iloc[0].values
+
+kmeans_df['sim'] = kmeans_df.apply(lambda x: cosine_similarity(compare0.reshape(1,-1), x.values.reshape(1,-1))[0][0], axis=1)
+
+kmeans_df['id'] = kmeans_df_y
+kmeans_df = kmeans_df.sort_values('sim', ascending=False)
+kmeans_df = kmeans_df[0:6]
+kmeans_df['img_url'] = np.nan
+kmeans_df['prev_url'] = np.nan
+kmeans_df['songname'] = np.nan
+
+
+
+col1, col2, col3, col4, col5, col6 = st.columns([2,1,1,1,1,1])
+for id in kmeans_df['id']:
+    search = requests.get(BASE_URL + 'tracks/' + id , headers=headers)
+    search = search.json()
+    kmeans_df['img_url'][kmeans_df['id']==id] = (search['album']['images'][0]['url'])
+    kmeans_df['prev_url'][kmeans_df['id']==id] = (search['preview_url'])
+    kmeans_df['songname'][kmeans_df['id']==id] = (search['name'])
+
+col1.image(kmeans_df['img_url'].iloc[0])
+col1.audio(kmeans_df['prev_url'].iloc[0])
+col2.image(kmeans_df['img_url'].iloc[1])
+col2.audio(kmeans_df['prev_url'].iloc[1])
+col2.write(kmeans_df['songname'].iloc[1])
+col3.image(kmeans_df['img_url'].iloc[2])
+col3.audio(kmeans_df['prev_url'].iloc[2])
+col4.image(kmeans_df['img_url'].iloc[3])
+col4.audio(kmeans_df['prev_url'].iloc[3])
+col5.image(kmeans_df['img_url'].iloc[4])
+col5.audio(kmeans_df['prev_url'].iloc[4])
+col6.image(kmeans_df['img_url'].iloc[5])
+col6.audio(kmeans_df['prev_url'].iloc[5])
+
+st.dataframe(kmeans_df)
 
 
 
 
+#### testing search bar idea
+search_term = st.text_input('Search an artist')
+
+search_term = 'Adele'
+search = requests.get(BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
+search = search.json()
+
+for item in search['artists']['items'][0:3]:
+    artist = item['name']
+    artist_id = item['id']
+    if (st.button(artist)):
+        top_song = requests.get(BASE_URL + 'artists/' + artist_id +'/top-tracks?market=US', headers=headers).json()['tracks'][0]
+        audio_feats = requests.get(BASE_URL + 'audio-features/' + top_song['id'], headers=headers).json()
+        st.dataframe(pd.DataFrame(audio_feats, index=['id']))
+        
+        #st.write(top_song['name'])
+        #st.dataframe(audio_feats)
+        #print(audio_feats)
+        
+        
+        #st.write('works')
+
+
+
+top_song_id = requests.get(BASE_URL + 'artists/4dpARuHxo51G3z768sgnrY/top-tracks?market=US', headers=headers).json()['tracks'][0]
+
+#st.write(artist)
+
+# search = requests.get(BASE_URL + 'search?q=artist:' + 'Beatles' + '&type=artist', headers=headers)
+# search = search.json()
+
+# artist_list = dict()
+#artist_img_url = []
+
+# results_len = len(search['artists']['items']) - 1
+
+# if results_len >= 3:
+#     for artists in search['artists']['items'][:3]:
+#         #print(artists)
+#         col1, col2 = st.columns(2)
+#         col1.write(artists['name'])
+#         col1.image(artists['images'][0]['url'])
+#         track_search = requests.get(BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
+#         for t in track_search['tracks'][:1]:
+#             print(t['preview_url'])
+#             if t['preview_url']:
+#                 col2.write('Top Song: ' + t['name'])
+#                 col2.audio(t['preview_url'])
+#             else:
+#                 col2.write('No audio preview available')
+
+# else:
+#     for artists in search['artists']['items'][:results_len]:
+#         #print(artists)
+#         col1, col2 = st.columns(2)
+#         col1.write(artists['name'])
+#         col1.image(artists['images'][0]['url'])
+#         track_search = requests.get(BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
+#         for t in track_search['tracks'][:1]:
+#             #print(t['preview_url'])
+#             if t['preview_url']:
+#                 col2.write('Top Song: ' + t['name'])
+#                 col2.audio(t['preview_url'])
+#                 col2.write(t['preview_url'])
+#         else:
+#             col2.write('No audio preview available')
+
+#col1.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][0]))
+#col1.markdown('**' + df['Artist'][0] + " - " + df['Track Name'][0] + '**')
+# col1.image(df['img_url'][0])
+# if pd.isna(playlist_data_df[df['Track ID'][0]==playlist_data_df['track_id']]['track_preview_url'].iloc[0]) == False:
+    # col1.audio(playlist_data_df[df['Track ID'][0]==playlist_data_df['track_id']]['track_preview_url'].iloc[0])
 
 
 
@@ -260,8 +408,51 @@ col2.altair_chart(cor_plot + text, use_container_width=True)
 # import numpy as np
 # import matplotlib.pyplot as plt
 # from sklearn.cluster import KMeans
+# from sklearn.manifold import TSNE
 # from sklearn.preprocessing import StandardScaler
 # from sklearn.metrics import silhouette_score
+# import seaborn as sns
+# import matplotlib.patheffects as PathEffects
+
+# sns.set_style('darkgrid')
+# sns.set_palette('muted')
+# sns.set_context("notebook", font_scale=1.5,
+#                 rc={"lines.linewidth": 2.5})
+# RS = 123
+
+
+# def fashion_scatter(x, colors):
+#     # choose a color palette with seaborn.
+#     num_classes = len(np.unique(colors))
+#     palette = np.array(sns.color_palette("hls", num_classes))
+
+#     # create a scatter plot.
+#     f = plt.figure(figsize=(8, 8))
+#     ax = plt.subplot(aspect='equal')
+#     sc = ax.scatter(x[:,0], x[:,1], lw=0, s=40, c=palette[colors.astype(np.int)])
+#     plt.xlim(-25, 25)
+#     plt.ylim(-25, 25)
+#     ax.axis('off')
+#     ax.axis('tight')
+
+#     # add the labels for each digit corresponding to the label
+#     txts = []
+
+#     for i in range(num_classes):
+
+#         # Position of each label at median of data points.
+
+#         xtext, ytext = np.median(x[colors == i, :], axis=0)
+#         txt = ax.text(xtext, ytext, str(i), fontsize=24)
+#         txt.set_path_effects([
+#             PathEffects.Stroke(linewidth=5, foreground="w"),
+#             PathEffects.Normal()])
+#         txts.append(txt)
+
+#     return f, ax, sc, txts
+
+
+
 
 
 
@@ -271,20 +462,52 @@ col2.altair_chart(cor_plot + text, use_container_width=True)
 # # res2['k_means']=kmeans.predict(res2)
 
 
-# kmeans_df = merged.drop(columns=['update_dttm'])
-# kmeans_df.country = pd.Categorical(kmeans_df.country)
-# #kmeans_df['country_code'] = kmeans_df.country.cat.codes
-# kmeans_df_y = kmeans_df.country.cat.codes
-# kmeans_df = kmeans_df.drop(columns=['country'])
+# kmeans_df = audio_features_df.drop(columns=['update_dttm', 'time_signature'])
+# kmeans_df.id = pd.Categorical(kmeans_df.id)
+# kmeans_df['id'] = kmeans_df.id.cat.codes
+# kmeans_df_y = kmeans_df.id
+# kmeans_df = kmeans_df.drop(columns=['id'])
 
 # scaler = StandardScaler()
 # scaled_features = scaler.fit_transform(kmeans_df)
 
 
+# tsne = TSNE(n_components=2).fit_transform(scaled_features)
+
+
+
+
+
+
+
+
+
+# tsne = pd.DataFrame(tsne)
+# tsne['duration_ms'] = kmeans_df['duration_ms']
+
+# plt.figure(figsize=(10,10))
+
+# ax = sns.scatterplot(data=tsne, x=0, y=1, 
+#                      size='duration_ms', sizes=(50,1000), 
+#                      alpha=0.7)
+
+# # display legend without `size` attribute
+# h,labs = ax.get_legend_handles_labels()
+# ax.legend(h[1:10], labs[1:10], loc='best', ncol=2)
+
+
+
+
+
+
+
+
+
+
 
 
 # distortions = []
-# K = range(1,10)
+# K = range(1,20)
 # for k in K:
 #     kmeanModel = KMeans(n_clusters=k)
 #     kmeanModel.fit(scaled_features)
@@ -297,6 +520,23 @@ col2.altair_chart(cor_plot + text, use_container_width=True)
 # plt.title('The Elbow Method showing the optimal k')
 # plt.show()
 
+
+
+
+# silhouette_coefficients = []
+
+# for k in range(2, 20):
+#     kmeans = KMeans(n_clusters=k)
+#     kmeans.fit(scaled_features)
+#     score = silhouette_score(scaled_features, kmeans.labels_)
+#     silhouette_coefficients.append(score)
+
+# plt.style.use("fivethirtyeight")
+# plt.plot(range(2, 20), silhouette_coefficients)
+# plt.xticks(range(2, 20))
+# plt.xlabel("Number of Clusters")
+# plt.ylabel("Silhouette Coefficient")
+# plt.show()
 
 
 
