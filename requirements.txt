@@ -1,0 +1,8 @@
+altair==4.0.1
+librosa==0.8.1
+numpy==1.20.2
+pandas==1.2.3
+requests==2.26.0
+scikit_learn==1.0.1
+streamlit==1.1.0
+tqdm==4.60.0
