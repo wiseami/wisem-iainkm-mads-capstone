@@ -11,6 +11,7 @@ import os
 import sys
 import json
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 ### Spotify info
 #with open('credentials.json') as creds:
@@ -51,18 +52,18 @@ if sys.platform == 'win32':
     file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
     top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
     audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-    playlist_data_df = pd.read_csv(file_path + 'playlist_data\\2021-11-17.csv')
+    playlist_data_df = pd.read_csv(file_path + 'playlist_data\\2021-11-19.csv')
     global_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
 else:
     file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     top_pl_df = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
     audio_features_df = pd.read_csv(file_path + 'lookups/track_audio_features.csv')
-    playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-17.csv')
+    playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-19.csv')
     global_lookup = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
 
 ### Join some of the lookups together and drop unneeded columns
 merged = playlist_data_df.merge(audio_features_df, how='inner', left_on='track_id', right_on='id')
-merged = merged.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id'])
+merged = merged.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id','name','artist','album_img','preview_url','update_dttm'])
 
 grouped = merged.groupby(by=['country'], as_index=False)
 res = grouped.agg(['sum', 'count'])
@@ -76,8 +77,8 @@ res['duration_m'] = res['duration_ms_sum'] / 1000 / 60
 res['danceability'] = res['danceability_sum'] / res['duration_m']
 res['energy'] = res['energy_sum'] / res['duration_m']
 res['key'] = res['key_sum'] / res['duration_m']
-res['mode'] = res['mode_sum'] / res['duration_m']
 res['loudness'] = res['loudness_sum'] / res['duration_m']
+res['mode'] = res['mode_sum'] / res['duration_m']
 res['speechiness'] = res['speechiness_sum'] / res['duration_m']
 res['acousticness'] = res['acousticness_sum'] / res['duration_m']
 res['instrumentalness'] = res['instrumentalness_sum'] / res['duration_m']
@@ -85,7 +86,7 @@ res['liveness'] = res['liveness_sum'] / res['duration_m']
 res['valence'] = res['valence_sum'] / res['duration_m']
 res['tempo'] = res['tempo_sum'] / res['duration_m']
 
-res = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'update_dttm_sum', 'update_dttm_count', 'track_count','duration_m'])
+res = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m'])
 
 ### Start building out Streamlit assets
 st.set_page_config(layout="wide")
@@ -98,32 +99,27 @@ st.write("While the first day of scraping playlists came back with 3,450 total s
 # st.markdown('---')
 df = pd.DataFrame(playlist_data_df.groupby(['track_name', 'track_artist','track_id'])['country'].count().sort_values(ascending=False).reset_index()).head()
 df.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
-df['img_url'] = np.nan
-df.is_copy = False
+df = df.merge(audio_features_df[['id','album_img','preview_url']], how='inner', left_on='Track ID', right_on='id')
 
 col1, col2, col3 = st.columns(3)
-for id in df['Track ID']:
-    search = requests.get(BASE_URL + 'tracks/' + id , headers=headers)
-    search = search.json()
-    df['img_url'][df['Track ID']==id] = (search['album']['images'][0]['url'])
 
 col1.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][0]))
 col1.markdown('**' + df['Artist'][0] + " - " + df['Track Name'][0] + '**')
-col1.image(df['img_url'][0])
-if pd.isna(playlist_data_df[df['Track ID'][0]==playlist_data_df['track_id']]['track_preview_url'].iloc[0]) == False:
-    col1.audio(playlist_data_df[df['Track ID'][0]==playlist_data_df['track_id']]['track_preview_url'].iloc[0])
+col1.image(df['album_img'][0])
+if pd.isna(df['preview_url'][0]) == False:
+     col1.audio(df['preview_url'][0])
 
 col2.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][1]))
 col2.markdown('**' + df['Artist'][1] + " - " + df['Track Name'][1] + '**')
-col2.image(df['img_url'][1])
-if pd.isna(playlist_data_df[df['Track ID'][1]==playlist_data_df['track_id']]['track_preview_url'].iloc[1]) == False:
-    col2.audio(playlist_data_df[df['Track ID'][1]==playlist_data_df['track_id']]['track_preview_url'].iloc[1])
+col2.image(df['album_img'][1])
+if pd.isna(df['preview_url'][1]) == False:
+     col2.audio(df['preview_url'][1])
 
 col3.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][2]))
 col3.markdown('**' + df['Artist'][2] + " - " + df['Track Name'][2] + '**')
-col3.image(df['img_url'][2])
-if pd.isna(playlist_data_df[df['Track ID'][2]==playlist_data_df['track_id']]['track_preview_url'].iloc[2]) == False:
-    col3.audio(playlist_data_df[df['Track ID'][2]==playlist_data_df['track_id']]['track_preview_url'].iloc[2])
+col3.image(df['album_img'][2])
+if pd.isna(df['preview_url'][2]) == False:
+     col3.audio(df['preview_url'][2])
 
 st.markdown('---')
 
@@ -231,56 +227,97 @@ st.write("It looks like there are a handful of audio features that have high cor
 
 
 st.markdown('---')
-st.write('testing recommendation... right now it picks the predefined Adele song on left, runs cossim against others in our set, comes back with top 5 most similar')
+st.write('testing recommendation... right now it picks the predefined Adele song on left, runs cossim against playlists in our set, comes back with top 3 most similar')
+
+cossim_df = audio_features_df.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url'])
+cossim_df_y = cossim_df.id
+cossim_df['duration_m'] = cossim_df['duration_ms'] / 1000 / 60
+cossim_df['danceability'] = cossim_df['danceability'] / cossim_df['duration_m']
+cossim_df['energy'] = cossim_df['energy'] / cossim_df['duration_m']
+cossim_df['key'] = cossim_df['key'] / cossim_df['duration_m']
+cossim_df['loudness'] = cossim_df['loudness'] / cossim_df['duration_m']
+cossim_df['mode'] = cossim_df['mode'] / cossim_df['duration_m']
+cossim_df['speechiness'] = cossim_df['speechiness'] / cossim_df['duration_m']
+cossim_df['acousticness'] = cossim_df['acousticness'] / cossim_df['duration_m']
+cossim_df['instrumentalness'] = cossim_df['instrumentalness'] / cossim_df['duration_m']
+cossim_df['liveness'] = cossim_df['liveness'] / cossim_df['duration_m']
+cossim_df['valence'] = cossim_df['valence'] / cossim_df['duration_m']
+cossim_df['tempo'] = cossim_df['tempo'] / cossim_df['duration_m']
+
+# cossim_df = cossim_df.drop(columns=['id','duration_ms','tempo', 'duration_m'])
+
+compare0 = cossim_df.drop(columns=['id','duration_ms','tempo', 'duration_m']).iloc[0].values
+
+cossim_df = cossim_df.merge(audio_features_df[['id', 'name', 'artist','album_img','preview_url']], how='inner', on='id')
+cossim_df = cossim_df.drop_duplicates(subset=['name']).reset_index(drop=True)
 
 
-from sklearn.metrics.pairwise import cosine_similarity
-kmeans_df = audio_features_df.drop(columns=['update_dttm', 'time_signature'])
-#kmeans_df.id = pd.Categorical(kmeans_df.id)
-#kmeans_df['id'] = kmeans_df.id.cat.codes
-kmeans_df_y = kmeans_df.id
-kmeans_df = kmeans_df.drop(columns=['id','duration_ms','tempo'])
+compare_df = res.copy()
+compare_df_y = compare_df['country']
+compare_df = compare_df.drop(columns=['country','tempo'])
+compare_df['sim'] = compare_df.apply(lambda x: cosine_similarity(compare0.reshape(1,-1), x.values.reshape(1,-1))[0][0], axis=1)
+compare_df['id'] = compare_df_y
 
-compare0 = kmeans_df.iloc[0].values
+compare_df_sort = compare_df.sort_values('sim',ascending=False)[0:5]
+compare_df_sort = compare_df_sort.merge(global_lookup[['country','name','link','playlist_img']], how='inner', left_on='id', right_on='country')
 
-kmeans_df['sim'] = kmeans_df.apply(lambda x: cosine_similarity(compare0.reshape(1,-1), x.values.reshape(1,-1))[0][0], axis=1)
+col1, col2, col3,col4 = st.columns([4,3,3,3])
+col1.image(cossim_df['album_img'].iloc[0])
+col1.audio(cossim_df['preview_url'].iloc[0])
 
-kmeans_df['id'] = kmeans_df_y
-kmeans_df = kmeans_df.sort_values('sim', ascending=False)
-kmeans_df = kmeans_df[0:6]
-kmeans_df['img_url'] = np.nan
-kmeans_df['prev_url'] = np.nan
-kmeans_df['songname'] = np.nan
-
-
-
-col1, col2, col3, col4, col5, col6 = st.columns([2,1,1,1,1,1])
-for id in kmeans_df['id']:
-    search = requests.get(BASE_URL + 'tracks/' + id , headers=headers)
-    search = search.json()
-    kmeans_df['img_url'][kmeans_df['id']==id] = (search['album']['images'][0]['url'])
-    kmeans_df['prev_url'][kmeans_df['id']==id] = (search['preview_url'])
-    kmeans_df['songname'][kmeans_df['id']==id] = (search['name'])
-
-col1.image(kmeans_df['img_url'].iloc[0])
-col1.audio(kmeans_df['prev_url'].iloc[0])
-col2.image(kmeans_df['img_url'].iloc[1])
-col2.audio(kmeans_df['prev_url'].iloc[1])
-col2.write(kmeans_df['songname'].iloc[1])
-col3.image(kmeans_df['img_url'].iloc[2])
-col3.audio(kmeans_df['prev_url'].iloc[2])
-col4.image(kmeans_df['img_url'].iloc[3])
-col4.audio(kmeans_df['prev_url'].iloc[3])
-col5.image(kmeans_df['img_url'].iloc[4])
-col5.audio(kmeans_df['prev_url'].iloc[4])
-col6.image(kmeans_df['img_url'].iloc[5])
-col6.audio(kmeans_df['prev_url'].iloc[5])
-
-st.dataframe(kmeans_df)
+#col2.markdown([compare_df_sort['name'].iloc[0]](compare_df_sort['link'].iloc[0]))
+col2.image(compare_df_sort['playlist_img'].iloc[0])
+col3.image(compare_df_sort['playlist_img'].iloc[1])
+col4.image(compare_df_sort['playlist_img'].iloc[2])
 
 
 
 
+
+
+
+
+
+
+
+
+# cossim_df['sim'] = cossim_df.apply(lambda x: cosine_similarity(compare0.reshape(1,-1), x.values.reshape(1,-1))[0][0], axis=1)
+# cossim_df['id'] = cossim_df_y
+# cossim_df = cossim_df.sort_values('sim', ascending=False)
+# cossim_df = cossim_df[0:7]
+
+# cossim_df = cossim_df.merge(audio_features_df[['id', 'name', 'artist','album_img','preview_url']], how='inner', on='id')
+# cossim_df = cossim_df.drop_duplicates(subset=['name']).reset_index(drop=True)
+
+# col1, col2, col3, col4, col5, col6 = st.columns([2,1,1,1,1,1])
+# # for id in kmeans_df['id']:
+# #     search = requests.get(BASE_URL + 'tracks/' + id , headers=headers)
+# #     search = search.json()
+# #     kmeans_df['img_url'][kmeans_df['id']==id] = (search['album']['images'][0]['url'])
+# #     kmeans_df['prev_url'][kmeans_df['id']==id] = (search['preview_url'])
+# #     kmeans_df['songname'][kmeans_df['id']==id] = (search['name'])
+
+# col1.image(cossim_df['album_img'].iloc[0])
+# col1.audio(cossim_df['preview_url'].iloc[0])
+# col2.image(cossim_df['album_img'].iloc[1])
+# col2.audio(cossim_df['preview_url'].iloc[1])
+# col2.write(cossim_df['name'].iloc[1])
+# col3.image(cossim_df['album_img'].iloc[2])
+# col3.audio(cossim_df['preview_url'].iloc[2])
+# col4.image(cossim_df['album_img'].iloc[3])
+# col4.audio(cossim_df['preview_url'].iloc[3])
+# col5.image(cossim_df['album_img'].iloc[4])
+# col5.audio(cossim_df['preview_url'].iloc[4])
+# col6.image(cossim_df['album_img'].iloc[5])
+# if pd.isna(cossim_df['preview_url'][5]) == False:
+#     col6.audio(cossim_df['preview_url'].iloc[5])
+
+# st.dataframe(cossim_df)
+
+
+st.markdown('---')
+st.markdown('---')
+st.write('next step here is to have the search either hit just our df or spotify API, bring audio features back and cossim on the fly')
 #### testing search bar idea
 search_term = st.text_input('Search an artist')
 

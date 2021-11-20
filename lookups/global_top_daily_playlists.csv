@@ -1,70 +1,70 @@
-country,market,id
-global,GO,37i9dQZEVXbMDoHDwVN2tF
-argentina,AR,37i9dQZEVXbMMy2roB9myp
-australia,AU,37i9dQZEVXbJPcfkRz0wJ0
-austria,AT,37i9dQZEVXbKNHh6NIXu36
-belgium,BE,37i9dQZEVXbJNSeeHswcKB
-bolivia,BO,37i9dQZEVXbJqfMFK4d691
-brazil,BR,37i9dQZEVXbMXbN3EUUhlg
-bulgaria,BG,37i9dQZEVXbNfM2w2mq1B8
-canada,CA,37i9dQZEVXbKj23U1GF4IR
-chile,CL,37i9dQZEVXbL0GavIqMTeb
-colombia,CO,37i9dQZEVXbOa2lmxNORXQ
-costa_rica,CR,37i9dQZEVXbMZAjGMynsQX
-czech_republic,CZ,37i9dQZEVXbIP3c3fqVrJY
-denmark,DK,37i9dQZEVXbL3J0k32lWnN
-dominican_republic,DO,37i9dQZEVXbKAbrMR8uuf7
-ecuador,EC,37i9dQZEVXbJlM6nvL1nD1
-egypt,EG,37i9dQZEVXbLn7RQmT5Xv2
-el_salvador,SV,37i9dQZEVXbLxoIml4MYkT
-estonia,EE,37i9dQZEVXbLesry2Qw2xS
-finland,FI,37i9dQZEVXbMxcczTSoGwZ
-france,FR,37i9dQZEVXbIPWwFssbupI
-germany,DE,37i9dQZEVXbJiZcmkrIHGU
-greece,GR,37i9dQZEVXbJqdarpmTJDL
-guatemala,GT,37i9dQZEVXbLy5tBFyQvd4
-honduras,HN,37i9dQZEVXbJp9wcIM9Eo5
-hong_kong,HK,37i9dQZEVXbLwpL8TjsxOG
-hungary,HU,37i9dQZEVXbNHwMxAkvmF8
-iceland,IS,37i9dQZEVXbKMzVsSGQ49S
-india,IN,37i9dQZEVXbLZ52XmnySJg
-indonesia,ID,37i9dQZEVXbObFQZ3JLcXt
-ireland,IE,37i9dQZEVXbKM896FDX8L1
-israel,IL,37i9dQZEVXbJ6IpvItkve3
-italy,IT,37i9dQZEVXbIQnj7RRhdSX
-japan,JP,37i9dQZEVXbKXQ4mDTEBXq
-latvia,LV,37i9dQZEVXbJWuzDrTxbKS
-lithuania,LT,37i9dQZEVXbMx56Rdq5lwc
-luxembourg,LU,37i9dQZEVXbKGcyg6TFGx6
-malaysia,MY,37i9dQZEVXbJlfUljuZExa
-mexico,MX,37i9dQZEVXbO3qyFxbkOE1
-morocco,MA,37i9dQZEVXbJU9eQpX8gPT
-netherlands,NL,37i9dQZEVXbKCF6dqVpDkS
-new_zealand,NZ,37i9dQZEVXbM8SIrkERIYl
-nicaragua,NI,37i9dQZEVXbISk8kxnzfCq
-norway,NO,37i9dQZEVXbJvfa0Yxg7E7
-panama,PA,37i9dQZEVXbKypXHVwk1f0
-paraguay,PY,37i9dQZEVXbNOUPGj7tW6T
-peru,PE,37i9dQZEVXbJfdy5b0KP7W
-philippines,PH,37i9dQZEVXbNBz9cRCSFkY
-poland,PL,37i9dQZEVXbN6itCcaL3Tt
-portugal,PT,37i9dQZEVXbKyJS56d1pgi
-romania,RO,37i9dQZEVXbNZbJ6TZelCq
-russia,RU,37i9dQZEVXbL8l7ra5vVdB
-saudi_arabia,SA,37i9dQZEVXbLrQBcXqUtaC
-singapore,SG,37i9dQZEVXbK4gjvS1FjPY
-slovakia,SK,37i9dQZEVXbKIVTPX9a2Sb
-south_africa,ZA,37i9dQZEVXbMH2jvi6jvjk
-south_korea,KR,37i9dQZEVXbNxXF4SkHj9F
-spain,ES,37i9dQZEVXbNFJfN1Vw8d9
-sweden,SE,37i9dQZEVXbLoATJ81JYXz
-switzerland,CH,37i9dQZEVXbJiyhoAPEfMK
-taiwan,TW,37i9dQZEVXbMnZEatlMSiu
-thailand,TH,37i9dQZEVXbMnz8KIWsvf9
-turkey,TR,37i9dQZEVXbIVYVBNw9D5K
-ukraine,UA,37i9dQZEVXbKkidEfWYRuD
-uae,AE,37i9dQZEVXbM4UZuIrvHvA
-united_kingdom,GB,37i9dQZEVXbLnolsZ8PSNw
-united_states,US,37i9dQZEVXbLRQDuF5jeBp
-uruguay,UY,37i9dQZEVXbMJJi3wgRbAy
-vietnam,VN,37i9dQZEVXbLdGSmz6xilI
+country,market,id,name,link,playlist_img
+global,GO,37i9dQZEVXbMDoHDwVN2tF,Top 50 - Global,https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2t,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_global_large.jpg
+argentina,AR,37i9dQZEVXbMMy2roB9myp,Top 50 - Argentina,https://open.spotify.com/playlist/37i9dQZEVXbMMy2roB9myp,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ar_large.jpg
+australia,AU,37i9dQZEVXbJPcfkRz0wJ0,Top 50 - Australia,https://open.spotify.com/playlist/37i9dQZEVXbJPcfkRz0wJ0,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_au_large.jpg
+austria,AT,37i9dQZEVXbKNHh6NIXu36,Top 50 - Austria, https://open.spotify.com/playlist/37i9dQZEVXbKNHh6NIXu36,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_at_large.jpg
+belgium,BE,37i9dQZEVXbJNSeeHswcKB,Top 50 - Belgium,https://open.spotify.com/playlist/37i9dQZEVXbJNSeeHswcKB,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_be_large.jpg
+bolivia,BO,37i9dQZEVXbJqfMFK4d691,Top 50 - Bolivia,https://open.spotify.com/playlist/37i9dQZEVXbJqfMFK4d691,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_bo_large.jpg
+brazil,BR,37i9dQZEVXbMXbN3EUUhlg,Top 50 - Brazil,https://open.spotify.com/playlist/37i9dQZEVXbMXbN3EUUhlg,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_br_large.jpg
+bulgaria,BG,37i9dQZEVXbNfM2w2mq1B8,Top 50 - Bulgaria,https://open.spotify.com/playlist/37i9dQZEVXbNfM2w2mq1B8,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_bg_large.jpg
+canada,CA,37i9dQZEVXbKj23U1GF4IR,Top 50 - Canada,https://open.spotify.com/playlist/37i9dQZEVXbKj23U1GF4IR,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ca_large.jpg
+chile,CL,37i9dQZEVXbL0GavIqMTeb,Top 50 - Chile,https://open.spotify.com/playlist/37i9dQZEVXbL0GavIqMTeb,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_cl_large.jpg
+colombia,CO,37i9dQZEVXbOa2lmxNORXQ,Top 50 - Colombia,https://open.spotify.com/playlist/37i9dQZEVXbOa2lmxNORXQ,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_co_large.jpg
+costa_rica,CR,37i9dQZEVXbMZAjGMynsQX,Top 50 - Costa Rica,https://open.spotify.com/playlist/37i9dQZEVXbMZAjGMynsQX,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_cr_large.jpg
+czech_republic,CZ,37i9dQZEVXbIP3c3fqVrJY,Top 50 - Czech Republic,https://open.spotify.com/playlist/37i9dQZEVXbIP3c3fqVrJY,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_cz_large.jpg
+denmark,DK,37i9dQZEVXbL3J0k32lWnN,Top 50 - Denmark,https://open.spotify.com/playlist/37i9dQZEVXbL3J0k32lWnN,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_dk_large.jpg
+dominican_republic,DO,37i9dQZEVXbKAbrMR8uuf7,Top 50 - Dominican Republic,https://open.spotify.com/playlist/37i9dQZEVXbKAbrMR8uuf7,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_do_large.jpg
+ecuador,EC,37i9dQZEVXbJlM6nvL1nD1,Top 50 - Ecuador,https://open.spotify.com/playlist/37i9dQZEVXbJlM6nvL1nD1,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ec_large.jpg
+egypt,EG,37i9dQZEVXbLn7RQmT5Xv2,Top 50 - Egypt,https://open.spotify.com/playlist/37i9dQZEVXbLn7RQmT5Xv2,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_eg_large.jpg
+el_salvador,SV,37i9dQZEVXbLxoIml4MYkT,Top 50 - El Salvador,https://open.spotify.com/playlist/37i9dQZEVXbLxoIml4MYkT,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_sv_large.jpg
+estonia,EE,37i9dQZEVXbLesry2Qw2xS,Top 50 - Estonia,https://open.spotify.com/playlist/37i9dQZEVXbLesry2Qw2xS,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ee_large.jpg
+finland,FI,37i9dQZEVXbMxcczTSoGwZ,Top 50 - Finland,https://open.spotify.com/playlist/37i9dQZEVXbMxcczTSoGwZ,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_fi_large.jpg
+france,FR,37i9dQZEVXbIPWwFssbupI,Top 50 - France,https://open.spotify.com/playlist/37i9dQZEVXbIPWwFssbupI,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_fr_large.jpg
+germany,DE,37i9dQZEVXbJiZcmkrIHGU,Top 50 - Germany,https://open.spotify.com/playlist/37i9dQZEVXbJiZcmkrIHGU,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_de_large.jpg
+greece,GR,37i9dQZEVXbJqdarpmTJDL,Top 50 - Greece,https://open.spotify.com/playlist/37i9dQZEVXbJqdarpmTJDL,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_gr_large.jpg
+guatemala,GT,37i9dQZEVXbLy5tBFyQvd4,Top 50 - Guatemala,https://open.spotify.com/playlist/37i9dQZEVXbLy5tBFyQvd4,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_gt_large.jpg
+honduras,HN,37i9dQZEVXbJp9wcIM9Eo5,Top 50 - Honduras,https://open.spotify.com/playlist/37i9dQZEVXbJp9wcIM9Eo5,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_hn_large.jpg
+hong_kong,HK,37i9dQZEVXbLwpL8TjsxOG,Top 50 - Hong Kong,https://open.spotify.com/playlist/37i9dQZEVXbLwpL8TjsxOG,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_hk_large.jpg
+hungary,HU,37i9dQZEVXbNHwMxAkvmF8,Top 50 - Hungary,https://open.spotify.com/playlist/37i9dQZEVXbNHwMxAkvmF8,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_hu_large.jpg
+iceland,IS,37i9dQZEVXbKMzVsSGQ49S,Top 50 - Iceland,https://open.spotify.com/playlist/37i9dQZEVXbKMzVsSGQ49S,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_is_large.jpg
+india,IN,37i9dQZEVXbLZ52XmnySJg,Top 50 - India,https://open.spotify.com/playlist/37i9dQZEVXbLZ52XmnySJg,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_in_large.jpg
+indonesia,ID,37i9dQZEVXbObFQZ3JLcXt,Top 50 - Indonesia,https://open.spotify.com/playlist/37i9dQZEVXbObFQZ3JLcXt,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_id_large.jpg
+ireland,IE,37i9dQZEVXbKM896FDX8L1,Top 50 - Ireland,https://open.spotify.com/playlist/37i9dQZEVXbKM896FDX8L1,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ie_large.jpg
+israel,IL,37i9dQZEVXbJ6IpvItkve3,Top 50 - Israel,https://open.spotify.com/playlist/37i9dQZEVXbJ6IpvItkve3,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_il_large.jpg
+italy,IT,37i9dQZEVXbIQnj7RRhdSX,Top 50 - Italy,https://open.spotify.com/playlist/37i9dQZEVXbIQnj7RRhdSX,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_it_large.jpg
+japan,JP,37i9dQZEVXbKXQ4mDTEBXq,Top 50 - Japan,https://open.spotify.com/playlist/37i9dQZEVXbKXQ4mDTEBXq,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_jp_large.jpg
+latvia,LV,37i9dQZEVXbJWuzDrTxbKS,Top 50 - Latvia,https://open.spotify.com/playlist/37i9dQZEVXbJWuzDrTxbKS,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_lv_large.jpg
+lithuania,LT,37i9dQZEVXbMx56Rdq5lwc,Top 50 - Lithuania,https://open.spotify.com/playlist/37i9dQZEVXbMx56Rdq5lwc,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_lt_large.jpg
+luxembourg,LU,37i9dQZEVXbKGcyg6TFGx6,Top 50 - Luxembourg,https://open.spotify.com/playlist/37i9dQZEVXbKGcyg6TFGx6,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_lu_large.jpg
+malaysia,MY,37i9dQZEVXbJlfUljuZExa,Top 50 - Malaysia,https://open.spotify.com/playlist/37i9dQZEVXbJlfUljuZExa,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_my_large.jpg
+mexico,MX,37i9dQZEVXbO3qyFxbkOE1,Top 50 - Mexico,https://open.spotify.com/playlist/37i9dQZEVXbO3qyFxbkOE1,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_mx_large.jpg
+morocco,MA,37i9dQZEVXbJU9eQpX8gPT,Top 50 - Morocco,https://open.spotify.com/playlist/37i9dQZEVXbJU9eQpX8gPT,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ma_large.jpg
+netherlands,NL,37i9dQZEVXbKCF6dqVpDkS,Top 50 - Netherlands,https://open.spotify.com/playlist/37i9dQZEVXbKCF6dqVpDkS,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_nl_large.jpg
+new_zealand,NZ,37i9dQZEVXbM8SIrkERIYl,Top 50 - New Zealand,https://open.spotify.com/playlist/37i9dQZEVXbM8SIrkERIYl,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_nz_large.jpg
+nicaragua,NI,37i9dQZEVXbISk8kxnzfCq,Top 50 - Nicaragua,https://open.spotify.com/playlist/37i9dQZEVXbISk8kxnzfCq,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ni_large.jpg
+norway,NO,37i9dQZEVXbJvfa0Yxg7E7,Top 50 - Norway,https://open.spotify.com/playlist/37i9dQZEVXbJvfa0Yxg7E7,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_no_large.jpg
+panama,PA,37i9dQZEVXbKypXHVwk1f0,Top 50 - Panama,https://open.spotify.com/playlist/37i9dQZEVXbKypXHVwk1f0,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_pa_large.jpg
+paraguay,PY,37i9dQZEVXbNOUPGj7tW6T,Top 50 - Paraguay,https://open.spotify.com/playlist/37i9dQZEVXbNOUPGj7tW6T,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_py_large.jpg
+peru,PE,37i9dQZEVXbJfdy5b0KP7W,Top 50 - Peru,https://open.spotify.com/playlist/37i9dQZEVXbJfdy5b0KP7W,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_pe_large.jpg
+philippines,PH,37i9dQZEVXbNBz9cRCSFkY,Top 50 - Philippines,https://open.spotify.com/playlist/37i9dQZEVXbNBz9cRCSFkY,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ph_large.jpg
+poland,PL,37i9dQZEVXbN6itCcaL3Tt,Top 50 - Poland,https://open.spotify.com/playlist/37i9dQZEVXbN6itCcaL3Tt,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_pl_large.jpg
+portugal,PT,37i9dQZEVXbKyJS56d1pgi,Top 50 - Portugal,https://open.spotify.com/playlist/37i9dQZEVXbKyJS56d1pgi,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_pt_large.jpg
+romania,RO,37i9dQZEVXbNZbJ6TZelCq,Top 50 - Romania,https://open.spotify.com/playlist/37i9dQZEVXbNZbJ6TZelCq,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ro_large.jpg
+russia,RU,37i9dQZEVXbL8l7ra5vVdB,Top 50 - Russia,https://open.spotify.com/playlist/37i9dQZEVXbL8l7ra5vVdB,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ru_large.jpg
+saudi_arabia,SA,37i9dQZEVXbLrQBcXqUtaC,Top 50 - Saudi Arabia,https://open.spotify.com/playlist/37i9dQZEVXbLrQBcXqUtaC,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_sa_large.jpg
+singapore,SG,37i9dQZEVXbK4gjvS1FjPY,Top 50 - Singapore,https://open.spotify.com/playlist/37i9dQZEVXbK4gjvS1FjPY,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_sg_large.jpg
+slovakia,SK,37i9dQZEVXbKIVTPX9a2Sb,Top 50 - Slovakia,https://open.spotify.com/playlist/37i9dQZEVXbKIVTPX9a2Sb,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_sk_large.jpg
+south_africa,ZA,37i9dQZEVXbMH2jvi6jvjk,Top 50 - South Africa,https://open.spotify.com/playlist/37i9dQZEVXbMH2jvi6jvjk,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_za_large.jpg
+south_korea,KR,37i9dQZEVXbNxXF4SkHj9F,Top 50 - South Korea,https://open.spotify.com/playlist/37i9dQZEVXbNxXF4SkHj9F,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_kr_large.jpg
+spain,ES,37i9dQZEVXbNFJfN1Vw8d9,Top 50 - Spain,https://open.spotify.com/playlist/37i9dQZEVXbNFJfN1Vw8d9,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_es_large.jpg
+sweden,SE,37i9dQZEVXbLoATJ81JYXz,Top 50 - Sweden,https://open.spotify.com/playlist/37i9dQZEVXbLoATJ81JYXz,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_se_large.jpg
+switzerland,CH,37i9dQZEVXbJiyhoAPEfMK,Top 50 - Switzerland,https://open.spotify.com/playlist/37i9dQZEVXbJiyhoAPEfMK,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ch_large.jpg
+taiwan,TW,37i9dQZEVXbMnZEatlMSiu,Top 50 - Taiwan,https://open.spotify.com/playlist/37i9dQZEVXbMnZEatlMSiu,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_tw_large.jpg
+thailand,TH,37i9dQZEVXbMnz8KIWsvf9,Top 50 - Thailand,https://open.spotify.com/playlist/37i9dQZEVXbMnz8KIWsvf9,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_th_large.jpg
+turkey,TR,37i9dQZEVXbIVYVBNw9D5K,Top 50 - Turkey,https://open.spotify.com/playlist/37i9dQZEVXbIVYVBNw9D5K,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_tr_large.jpg
+ukraine,UA,37i9dQZEVXbKkidEfWYRuD,Top 50 - Ukraine,https://open.spotify.com/playlist/37i9dQZEVXbKkidEfWYRuD,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ua_large.jpg
+uae,AE,37i9dQZEVXbM4UZuIrvHvA,Top 50 - UAE,https://open.spotify.com/playlist/37i9dQZEVXbM4UZuIrvHvA,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_ae_large.jpg
+united_kingdom,GB,37i9dQZEVXbLnolsZ8PSNw,Top 50 - United Kingdom,https://open.spotify.com/playlist/37i9dQZEVXbLnolsZ8PSNw,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_gb_large.jpg
+united_states,US,37i9dQZEVXbLRQDuF5jeBp,Top 50 - USA,https://open.spotify.com/playlist/37i9dQZEVXbLRQDuF5jeBp,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_us_large.jpg
+uruguay,UY,37i9dQZEVXbMJJi3wgRbAy,Top 50 - Uruguay,https://open.spotify.com/playlist/37i9dQZEVXbMJJi3wgRbAy,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_uy_large.jpg
+vietnam,VN,37i9dQZEVXbLdGSmz6xilI,Top 50 - Vietnam,https://open.spotify.com/playlist/37i9dQZEVXbLdGSmz6xilI,https://charts-images.scdn.co/assets/locale_en/regional/daily/region_vn_large.jpg
