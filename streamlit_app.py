@@ -1,90 +1,20 @@
-#from altair.utils.schemapi import SchemaValidationError
 import pandas as pd
 import streamlit as st
 import requests
 import tqdm
 import altair as alt
-import os
-import sys
-import json
+#from altair.utils.schemapi import SchemaValidationError
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 import utils
 
 ### Spotify info
-#with open('credentials.json') as creds:
-#    credentials = json.load(creds)
+headers, market, SPOTIFY_BASE_URL = utils.spotify_info()
 
-AUTH_URL = 'https://accounts.spotify.com/api/token'
+# load necessary data using function
+file_path, top_pl_df, audio_features_df, playlist_data_df, global_lookup, pl_w_audio_feats_df = utils.load_data()
 
-# auth_response = requests.post(AUTH_URL, {
-#     'grant_type': 'client_credentials',
-#     'client_id': credentials['CLIENT_ID'],
-#     'client_secret': credentials['CLIENT_SECRET'],
-# })
-
-# uses secrets.toml for Streamlit
-auth_response = requests.post(AUTH_URL, {
-    'grant_type': 'client_credentials',
-    'client_id': st.secrets['spotify_credentials']['CLIENT_ID'],
-    'client_secret': st.secrets['spotify_credentials']['CLIENT_SECRET'],
-})
-
-auth_response_data = auth_response.json()
-
-access_token = auth_response_data['access_token']
-
-headers = {
-    'Authorization': 'Bearer {token}'.format(token=access_token)
-}
-
-# only for testing purposes. NEed to remove this later
-market = '?market=US'
-
-# base URL of all Spotify API endpoints
-BASE_URL = 'https://api.spotify.com/v1/'
-
-
-### Specify where you're running - mostly in place for working locally vs testing streamlit cloud
-if sys.platform == 'win32':
-    file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
-    top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
-    audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-    playlist_data_df = pd.read_csv(file_path + 'playlist_data\\2021-11-19.csv')
-    global_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
-else:
-    file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
-    top_pl_df = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
-    audio_features_df = pd.read_csv(file_path + 'lookups/track_audio_features.csv')
-    playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-19.csv')
-    global_lookup = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
-
-### Join some of the lookups together and drop unneeded columns
-merged = playlist_data_df.merge(audio_features_df, how='inner', left_on='track_id', right_on='id')
-merged = merged.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id','name','artist','album_img','preview_url','update_dttm'])
-
-grouped = merged.groupby(by=['country'], as_index=False)
-res = grouped.agg(['sum', 'count'])
-res.columns = list(map('_'.join, res.columns.values))
-res = res.reset_index()
-
-### Create Spotify audio features normalized for playlist length
-res = res.drop(columns=['danceability_count', 'energy_count', 'key_count', 'loudness_count', 'mode_count', 'speechiness_count', 'acousticness_count', 'instrumentalness_count', 'liveness_count', 'valence_count', 'tempo_count'])
-res = res.rename(columns = {'duration_ms_count':'track_count'})
-res['duration_m'] = res['duration_ms_sum'] / 1000 / 60
-res['danceability'] = res['danceability_sum'] / res['duration_m']
-res['energy'] = res['energy_sum'] / res['duration_m']
-res['key'] = res['key_sum'] / res['duration_m']
-res['loudness'] = res['loudness_sum'] / res['duration_m']
-res['mode'] = res['mode_sum'] / res['duration_m']
-res['speechiness'] = res['speechiness_sum'] / res['duration_m']
-res['acousticness'] = res['acousticness_sum'] / res['duration_m']
-res['instrumentalness'] = res['instrumentalness_sum'] / res['duration_m']
-res['liveness'] = res['liveness_sum'] / res['duration_m']
-res['valence'] = res['valence_sum'] / res['duration_m']
-res['tempo'] = res['tempo_sum'] / res['duration_m']
-
-res = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m'])
+# Normalize spotify audio features and create playlist rollups
+playlist_audio_feature_rollup = utils.normalize_spotify_audio_feats(pl_w_audio_feats_df)
 
 ### Start building out Streamlit assets
 st.set_page_config(layout="wide")
@@ -126,12 +56,11 @@ feature_names_to_show = ['danceability','energy','key','loudness','mode','speech
 
 st.write("Let's take a look at the audio features computed and captured by Spotify for these three songs.")
 st.table(audio_features_df[0:3][feature_names_to_show])
-#st_profile_report(profile)
 
 feature_names = ['danceability','energy','key','loudness','mode','speechiness','acousticness',
                 'instrumentalness','liveness','valence','tempo', 'duration_ms', 'country']
 
-df_feat = merged[feature_names]
+df_feat = pl_w_audio_feats_df[feature_names]
 
 charts = []
 for feat in feature_names:
@@ -168,7 +97,7 @@ col2.altair_chart(charts[9], use_container_width=True)
 st.markdown('---')
 st.header('Correlations')
 
-res_correlation = res.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
+res_correlation = playlist_audio_feature_rollup.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
 res_correlation['correlation_label'] = res_correlation['correlation'].map('{:.2f}'.format)
 
 base = alt.Chart(res_correlation).encode(
@@ -231,11 +160,11 @@ st.write('next is to get cossim on the fly')
 search_term = st.text_input('Search an artist', 'Adele')
 
 #search_term = 'Adele'
-search = requests.get(BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
+search = requests.get(SPOTIFY_BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
 search = search.json()
 
 for item in search['artists']['items'][0:1]:
-    searchy = requests.get(BASE_URL + 'artists/' + item['id'] + '/top-tracks?market=US', headers=headers).json()
+    searchy = requests.get(SPOTIFY_BASE_URL + 'artists/' + item['id'] + '/top-tracks?market=US', headers=headers).json()
     st.write('Pick one of these top 5 songs for this artist.')
     for top_tracks in searchy['tracks'][0:5]:
         if st.button(top_tracks['name']):
@@ -243,10 +172,10 @@ for item in search['artists']['items'][0:1]:
                 final_df = audio_features_df[audio_features_df['id']==top_tracks['id']]
                 st.dataframe(final_df)
             else:
-                audio_feats = requests.get(BASE_URL + 'audio-features?ids=' + top_tracks['id'], headers=headers).json()
+                audio_feats = requests.get(SPOTIFY_BASE_URL + 'audio-features?ids=' + top_tracks['id'], headers=headers).json()
                 audio_features_df = utils.get_audio_features(audio_feats)
                 
-                track_info = requests.get(BASE_URL + 'tracks?ids=' + top_tracks['id'], headers=headers).json()
+                track_info = requests.get(SPOTIFY_BASE_URL + 'tracks?ids=' + top_tracks['id'], headers=headers).json()
                 track_info_df = utils.get_track_info(track_info)
 
                 final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
@@ -257,7 +186,7 @@ for item in search['artists']['items'][0:1]:
 try:
     st.markdown('---')
     st.write('Recommendations')
-    compare, cossim_df, compare_df_sort = utils.create_cossim_df(final_df, res, global_lookup)
+    compare, cossim_df, compare_df_sort = utils.create_cossim_df(final_df, playlist_audio_feature_rollup, global_lookup)
 
     col1, col2, col3,col4 = st.columns([4,3,3,3])
     col1.write(cossim_df['name'].iloc[0])
@@ -267,11 +196,14 @@ try:
     #col2.markdown([compare_df_sort['name'].iloc[0]](compare_df_sort['link'].iloc[0]))
     col2.image(compare_df_sort['playlist_img'].iloc[0])
     col2.markdown("[link](" + compare_df_sort['link'].iloc[0] + ")")
+    col2.write(compare_df_sort['sim'].iloc[0])
     #col2.markdown("[this is an image link]" + col2.image(compare_df_sort['playlist_img'].iloc[0]) + "(" + compare_df_sort['link'].iloc[0] + ")")
     col3.image(compare_df_sort['playlist_img'].iloc[1])
     col3.markdown("[link](" + compare_df_sort['link'].iloc[1] + ")")
+    col3.write(compare_df_sort['sim'].iloc[1])
     col4.image(compare_df_sort['playlist_img'].iloc[2])
     col4.markdown("[link](" + compare_df_sort['link'].iloc[2] + ")")
+    col4.write(compare_df_sort['sim'].iloc[2])
 except:
     pass
 
@@ -305,7 +237,7 @@ except:
 
 # col1, col2, col3, col4, col5, col6 = st.columns([2,1,1,1,1,1])
 # # for id in kmeans_df['id']:
-# #     search = requests.get(BASE_URL + 'tracks/' + id , headers=headers)
+# #     search = requests.get(SPOTIFY_BASE_URL + 'tracks/' + id , headers=headers)
 # #     search = search.json()
 # #     kmeans_df['img_url'][kmeans_df['id']==id] = (search['album']['images'][0]['url'])
 # #     kmeans_df['prev_url'][kmeans_df['id']==id] = (search['preview_url'])
@@ -333,8 +265,8 @@ except:
 #     artist_id = item['id']
 #     listy = []
 #     if (st.button(artist)):
-#         top_song = requests.get(BASE_URL + 'artists/' + artist_id +'/top-tracks?market=US', headers=headers).json()['tracks'][0]
-#         audio_feats = requests.get(BASE_URL + 'audio-features/' + top_song['id'], headers=headers).json()
+#         top_song = requests.get(SPOTIFY_BASE_URL + 'artists/' + artist_id +'/top-tracks?market=US', headers=headers).json()['tracks'][0]
+#         audio_feats = requests.get(SPOTIFY_BASE_URL + 'audio-features/' + top_song['id'], headers=headers).json()
 #         st.dataframe(pd.DataFrame(audio_feats, index=['id']))
         
         #st.write(top_song['name'])
@@ -346,11 +278,11 @@ except:
 
 
 
-#top_song_id = requests.get(BASE_URL + 'artists/4dpARuHxo51G3z768sgnrY/top-tracks?market=US', headers=headers).json()['tracks'][0]
+#top_song_id = requests.get(SPOTIFY_BASE_URL + 'artists/4dpARuHxo51G3z768sgnrY/top-tracks?market=US', headers=headers).json()['tracks'][0]
 
 #st.write(artist)
 
-# search = requests.get(BASE_URL + 'search?q=artist:' + 'Beatles' + '&type=artist', headers=headers)
+# search = requests.get(SPOTIFY_BASE_URL + 'search?q=artist:' + 'Beatles' + '&type=artist', headers=headers)
 # search = search.json()
 
 # artist_list = dict()
@@ -364,7 +296,7 @@ except:
 #         col1, col2 = st.columns(2)
 #         col1.write(artists['name'])
 #         col1.image(artists['images'][0]['url'])
-#         track_search = requests.get(BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
+#         track_search = requests.get(SPOTIFY_BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
 #         for t in track_search['tracks'][:1]:
 #             print(t['preview_url'])
 #             if t['preview_url']:
@@ -379,7 +311,7 @@ except:
 #         col1, col2 = st.columns(2)
 #         col1.write(artists['name'])
 #         col1.image(artists['images'][0]['url'])
-#         track_search = requests.get(BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
+#         track_search = requests.get(SPOTIFY_BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
 #         for t in track_search['tracks'][:1]:
 #             #print(t['preview_url'])
 #             if t['preview_url']:
@@ -400,12 +332,12 @@ except:
 # search_term = st.text_input('Search an artist', 'Led Zeppelin')
 
 
-# search = requests.get(BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
+# search = requests.get(SPOTIFY_BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
 # search = search.json()
 # #search
 
 
-# # search = requests.get(BASE_URL + 'search?q=artist:' + 'Beatles' + '&type=artist', headers=headers)
+# # search = requests.get(SPOTIFY_BASE_URL + 'search?q=artist:' + 'Beatles' + '&type=artist', headers=headers)
 # # search = search.json()
 
 # artist_list = dict()
@@ -419,7 +351,7 @@ except:
 #         col1, col2 = st.columns(2)
 #         col1.write(artists['name'])
 #         col1.image(artists['images'][0]['url'])
-#         track_search = requests.get(BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
+#         track_search = requests.get(SPOTIFY_BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
 #         for t in track_search['tracks'][:1]:
 #             print(t['preview_url'])
 #             if t['preview_url']:
@@ -434,7 +366,7 @@ except:
 #         col1, col2 = st.columns(2)
 #         col1.write(artists['name'])
 #         col1.image(artists['images'][0]['url'])
-#         track_search = requests.get(BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
+#         track_search = requests.get(SPOTIFY_BASE_URL + 'artists/' + artists['id'] + '/top-tracks' + market, headers=headers).json()
 #         for t in track_search['tracks'][:1]:
 #             #print(t['preview_url'])
 #             if t['preview_url']:
@@ -615,7 +547,7 @@ except:
 # Pandas Profiling and Streamlit
 ###################################
 
-#profile = pp.ProfileReport(res,
+#profile = pp.ProfileReport(playlist_audio_feature_rollup,
     #configuration_file="pandas_profiling_minimal.yml" 
     # variables={
     #     "descriptions": {
@@ -658,7 +590,6 @@ except:
 # feature_names = ['danceability','energy','key','loudness','mode','speechiness','acousticness',
 #                 'instrumentalness','liveness','valence','tempo', 'duration_ms', 'country']
 
-# df_feat = merged[feature_names]
 
 
 
