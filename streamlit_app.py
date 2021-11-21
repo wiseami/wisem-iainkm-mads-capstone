@@ -225,52 +225,63 @@ st.write("It looks like there are a handful of audio features that have high cor
 
 
 st.markdown('---')
-st.write('testing recommendation... right now it picks the predefined Adele song on left, runs cossim against playlists in our set, comes back with top 3 most similar')
+st.write('Search for artist to get top 5 songs. Clicking on a song checks our lookups first and if the song isnt there itll run a lookup against spotify API, bring audio features back.')  
+st.write('next is to get cossim on the fly')
+#### testing search bar idea
+search_term = st.text_input('Search an artist', 'Adele')
 
-cossim_df = audio_features_df.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url'])
-cossim_df_y = cossim_df.id
-cossim_df['duration_m'] = cossim_df['duration_ms'] / 1000 / 60
-cossim_df['danceability'] = cossim_df['danceability'] / cossim_df['duration_m']
-cossim_df['energy'] = cossim_df['energy'] / cossim_df['duration_m']
-cossim_df['key'] = cossim_df['key'] / cossim_df['duration_m']
-cossim_df['loudness'] = cossim_df['loudness'] / cossim_df['duration_m']
-cossim_df['mode'] = cossim_df['mode'] / cossim_df['duration_m']
-cossim_df['speechiness'] = cossim_df['speechiness'] / cossim_df['duration_m']
-cossim_df['acousticness'] = cossim_df['acousticness'] / cossim_df['duration_m']
-cossim_df['instrumentalness'] = cossim_df['instrumentalness'] / cossim_df['duration_m']
-cossim_df['liveness'] = cossim_df['liveness'] / cossim_df['duration_m']
-cossim_df['valence'] = cossim_df['valence'] / cossim_df['duration_m']
-cossim_df['tempo'] = cossim_df['tempo'] / cossim_df['duration_m']
+#search_term = 'Adele'
+search = requests.get(BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
+search = search.json()
 
-# cossim_df = cossim_df.drop(columns=['id','duration_ms','tempo', 'duration_m'])
+for item in search['artists']['items'][0:1]:
+    searchy = requests.get(BASE_URL + 'artists/' + item['id'] + '/top-tracks?market=US', headers=headers).json()
+    st.write('Pick one of these top 5 songs for this artist.')
+    for top_tracks in searchy['tracks'][0:5]:
+        if st.button(top_tracks['name']):
+            if audio_features_df['id'].str.contains(top_tracks['id']).any():
+                final_df = audio_features_df[audio_features_df['id']==top_tracks['id']]
+                st.dataframe(final_df)
+            else:
+                audio_feats = requests.get(BASE_URL + 'audio-features?ids=' + top_tracks['id'], headers=headers).json()
+                audio_features_df = utils.get_audio_features(audio_feats)
+                
+                track_info = requests.get(BASE_URL + 'tracks?ids=' + top_tracks['id'], headers=headers).json()
+                track_info_df = utils.get_track_info(track_info)
 
-compare0 = cossim_df.drop(columns=['id','duration_ms','tempo', 'duration_m']).iloc[0].values
+                final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
+                
+                st.dataframe(final_df)
 
-cossim_df = cossim_df.merge(audio_features_df[['id', 'name', 'artist','album_img','preview_url']], how='inner', on='id')
-cossim_df = cossim_df.drop_duplicates(subset=['name']).reset_index(drop=True)
+# once a button has been clicked, show the results on the page
+try:
+    st.markdown('---')
+    st.write('Recommendations')
+    compare, cossim_df, compare_df_sort = utils.create_cossim_df(final_df, res, global_lookup)
+
+    col1, col2, col3,col4 = st.columns([4,3,3,3])
+    col1.write(cossim_df['name'].iloc[0])
+    col1.image(cossim_df['album_img'].iloc[0])
+    col1.audio(cossim_df['preview_url'].iloc[0])
+
+    #col2.markdown([compare_df_sort['name'].iloc[0]](compare_df_sort['link'].iloc[0]))
+    col2.image(compare_df_sort['playlist_img'].iloc[0])
+    col2.markdown("[link](" + compare_df_sort['link'].iloc[0] + ")")
+    #col2.markdown("[this is an image link]" + col2.image(compare_df_sort['playlist_img'].iloc[0]) + "(" + compare_df_sort['link'].iloc[0] + ")")
+    col3.image(compare_df_sort['playlist_img'].iloc[1])
+    col3.markdown("[link](" + compare_df_sort['link'].iloc[1] + ")")
+    col4.image(compare_df_sort['playlist_img'].iloc[2])
+    col4.markdown("[link](" + compare_df_sort['link'].iloc[2] + ")")
+except:
+    pass
 
 
-compare_df = res.copy()
-compare_df_y = compare_df['country']
-compare_df = compare_df.drop(columns=['country','tempo'])
-compare_df['sim'] = compare_df.apply(lambda x: cosine_similarity(compare0.reshape(1,-1), x.values.reshape(1,-1))[0][0], axis=1)
-compare_df['id'] = compare_df_y
 
-compare_df_sort = compare_df.sort_values('sim',ascending=False)[0:5]
-compare_df_sort = compare_df_sort.merge(global_lookup[['country','name','link','playlist_img']], how='inner', left_on='id', right_on='country')
 
-col1, col2, col3,col4 = st.columns([4,3,3,3])
-col1.image(cossim_df['album_img'].iloc[0])
-col1.audio(cossim_df['preview_url'].iloc[0])
 
-#col2.markdown([compare_df_sort['name'].iloc[0]](compare_df_sort['link'].iloc[0]))
-col2.image(compare_df_sort['playlist_img'].iloc[0])
-col2.markdown("[link](" + compare_df_sort['link'].iloc[0] + ")")
-#col2.markdown("[this is an image link]" + col2.image(compare_df_sort['playlist_img'].iloc[0]) + "(" + compare_df_sort['link'].iloc[0] + ")")
-col3.image(compare_df_sort['playlist_img'].iloc[1])
-col3.markdown("[link](" + compare_df_sort['link'].iloc[1] + ")")
-col4.image(compare_df_sort['playlist_img'].iloc[2])
-col4.markdown("[link](" + compare_df_sort['link'].iloc[2] + ")")
+
+
+
 
 
 
@@ -316,46 +327,6 @@ col4.markdown("[link](" + compare_df_sort['link'].iloc[2] + ")")
 #     col6.audio(cossim_df['preview_url'].iloc[5])
 
 # st.dataframe(cossim_df)
-
-
-st.markdown('---')
-st.markdown('---')
-st.write('next step here is to have the search either hit just our df or spotify API, bring audio features back and cossim on the fly')
-#### testing search bar idea
-search_term = st.text_input('Search an artist')
-
-search_term = 'Adele'
-search = requests.get(BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
-search = search.json()
-
-for item in search['artists']['items'][0:1]:
-    searchy = requests.get(BASE_URL + 'artists/' + item['id'] + '/top-tracks?market=US', headers=headers).json()
-    for top_tracks in searchy['tracks'][0:6]:
-        if (st.button(top_tracks['name'])):
-            if audio_features_df['id'].str.contains(top_tracks['id']).any():
-                st.dataframe(audio_features_df[audio_features_df['id']==top_tracks['id']])
-            else:
-                audio_feats = requests.get(BASE_URL + 'audio-features?ids=' + top_tracks['id'], headers=headers).json()
-                audio_features_df = utils.get_audio_features(audio_feats)
-                
-                track_info = requests.get(BASE_URL + 'tracks?ids=' + top_tracks['id'], headers=headers).json()
-                track_info_df = utils.get_track_info(track_info)
-
-                final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
-                
-                st.dataframe(final_df)
-            
-            
-            
-            
-            
-
-
-
-
-
-
-
 
 # for item in search['artists']['items'][0:3]:
 #     artist = item['name']
