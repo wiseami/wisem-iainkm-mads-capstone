@@ -335,7 +335,6 @@ for item in search['artists']['items'][0:1]:
             if audio_features_df['id'].str.contains(top_tracks['id']).any():
                 st.dataframe(audio_features_df[audio_features_df['id']==top_tracks['id']])
             else:
-                #audio_feats = requests.get(BASE_URL + 'audio-features/' + top_tracks['id'], headers=headers).json()
                 audio_feats = requests.get(BASE_URL + 'audio-features?ids=' + top_tracks['id'], headers=headers).json()
                 audio_features_df = utils.get_audio_features(audio_feats)
                 
@@ -351,27 +350,11 @@ for item in search['artists']['items'][0:1]:
             
             
 
-#  for track_id_list in unique_tracks_for_api:
-#     req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
-#     feat = req.json()
-#     audio_features_df = pd.DataFrame.from_dict(get_audio_features(feat), orient='index')
-#     audio_features_df.index.name = 'id'
-#     audio_features_df.reset_index(inplace=True)
 
-#     req = requests.get(BASE_URL + 'tracks?ids=' + (','.join(track_id_list)), headers=headers)
-#     feat = req.json()
-#     track_info_df = pd.DataFrame.from_dict(get_track_info(feat), orient='index')
-#     track_info_df.index.name = 'id'
-#     track_info_df.reset_index(inplace=True)           
-            
-            
-            
-            
-            #st.write('beep')
 
-#if audio_features_df['id'].str.contains('0gplL1WMoJ6iYaPgMCL0gX').any():
-#    print(audio_features_df[audio_features_df['id']=='0gplL1WMoJ6iYaPgMCL0gX'])
-    #print('loo')
+
+
+
 
 
 # for item in search['artists']['items'][0:3]:

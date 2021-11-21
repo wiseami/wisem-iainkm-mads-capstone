@@ -60,9 +60,7 @@ for track_id_list in unique_tracks_for_api:
 
     req = requests.get(BASE_URL + 'tracks?ids=' + (','.join(track_id_list)), headers=headers)
     feat = req.json()
-    track_info_df = pd.DataFrame.from_dict(utils.get_track_info(feat), orient='index')
-    track_info_df.index.name = 'id'
-    track_info_df.reset_index(inplace=True)
+    track_info_df = utils.get_track_info(feat)
 
     final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
 
