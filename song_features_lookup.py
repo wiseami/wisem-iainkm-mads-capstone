@@ -6,6 +6,7 @@ from os.path import exists
 import time
 import json
 import itertools
+import utils
 
 with open('credentials.json') as creds:
     credentials = json.load(creds)
@@ -51,49 +52,15 @@ unique_tracks_for_api = list(split(unique_tracks, batch_size))
 
 update_dttm = datetime.datetime.now()
 
-# Function to pull audio features into dictionary
-def get_audio_features(feat):
-    track_list = dict()
-    for track in feat['audio_features']:
-        track_list[track['id']] = {'danceability' : track['danceability'], 
-                                   'energy' : track['energy'],
-                                   'key' : track['key'],
-                                   'loudness' : track['loudness'],
-                                   'mode' : track['mode'],
-                                   'speechiness' : track['speechiness'],
-                                   'acousticness' : track['acousticness'],
-                                   'instrumentalness' : track['instrumentalness'],
-                                   'liveness' : track['liveness'],
-                                   'valence' : track['valence'],
-                                   'tempo' : track['tempo'],
-                                   'duration_ms' : track['duration_ms'],
-                                   'time_signature' : track['time_signature'],
-                                   'update_dttm' : update_dttm
-                                  }
-    return track_list
-
-def get_track_info(feat):
-    track_list = dict()
-    for track in feat['tracks']:
-        track_list[track['id']] = {'name': track['name'],
-                                   'artist': track['artists'][0]['name'],
-                                   'album_img': track['album']['images'][0]['url'],
-                                   #'artist_img': track['artists'][0]['images'][0]['url'],
-                                   'preview_url': track['preview_url']
-                                  }
-    return track_list
-
 # Pull audio features using track dict and write/append to file
 for track_id_list in unique_tracks_for_api:
     req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
     feat = req.json()
-    audio_features_df = pd.DataFrame.from_dict(get_audio_features(feat), orient='index')
-    audio_features_df.index.name = 'id'
-    audio_features_df.reset_index(inplace=True)
+    audio_features_df = utils.get_audio_features(feat)
 
     req = requests.get(BASE_URL + 'tracks?ids=' + (','.join(track_id_list)), headers=headers)
     feat = req.json()
-    track_info_df = pd.DataFrame.from_dict(get_track_info(feat), orient='index')
+    track_info_df = pd.DataFrame.from_dict(utils.get_track_info(feat), orient='index')
     track_info_df.index.name = 'id'
     track_info_df.reset_index(inplace=True)
 

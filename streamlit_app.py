@@ -1,9 +1,6 @@
-from altair.utils.schemapi import SchemaValidationError
+#from altair.utils.schemapi import SchemaValidationError
 import pandas as pd
-# import pandas_profiling as pp
-# from pandas_profiling import ProfileReport
 import streamlit as st
-# from streamlit_pandas_profiling import st_profile_report
 import requests
 import tqdm
 import altair as alt
@@ -12,6 +9,7 @@ import sys
 import json
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import utils
 
 ### Spotify info
 #with open('credentials.json') as creds:
@@ -267,8 +265,13 @@ col1.audio(cossim_df['preview_url'].iloc[0])
 
 #col2.markdown([compare_df_sort['name'].iloc[0]](compare_df_sort['link'].iloc[0]))
 col2.image(compare_df_sort['playlist_img'].iloc[0])
+col2.markdown("[link](" + compare_df_sort['link'].iloc[0] + ")")
+#col2.markdown("[this is an image link]" + col2.image(compare_df_sort['playlist_img'].iloc[0]) + "(" + compare_df_sort['link'].iloc[0] + ")")
 col3.image(compare_df_sort['playlist_img'].iloc[1])
+col3.markdown("[link](" + compare_df_sort['link'].iloc[1] + ")")
 col4.image(compare_df_sort['playlist_img'].iloc[2])
+col4.markdown("[link](" + compare_df_sort['link'].iloc[2] + ")")
+
 
 
 
@@ -325,13 +328,60 @@ search_term = 'Adele'
 search = requests.get(BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
 search = search.json()
 
-for item in search['artists']['items'][0:3]:
-    artist = item['name']
-    artist_id = item['id']
-    if (st.button(artist)):
-        top_song = requests.get(BASE_URL + 'artists/' + artist_id +'/top-tracks?market=US', headers=headers).json()['tracks'][0]
-        audio_feats = requests.get(BASE_URL + 'audio-features/' + top_song['id'], headers=headers).json()
-        st.dataframe(pd.DataFrame(audio_feats, index=['id']))
+for item in search['artists']['items'][0:1]:
+    searchy = requests.get(BASE_URL + 'artists/' + item['id'] + '/top-tracks?market=US', headers=headers).json()
+    for top_tracks in searchy['tracks'][0:6]:
+        if (st.button(top_tracks['name'])):
+            if audio_features_df['id'].str.contains(top_tracks['id']).any():
+                st.dataframe(audio_features_df[audio_features_df['id']==top_tracks['id']])
+            else:
+                #audio_feats = requests.get(BASE_URL + 'audio-features/' + top_tracks['id'], headers=headers).json()
+                audio_feats = requests.get(BASE_URL + 'audio-features?ids=' + top_tracks['id'], headers=headers).json()
+                audio_features_df = utils.get_audio_features(audio_feats)
+                
+                track_info = requests.get(BASE_URL + 'tracks?ids=' + top_tracks['id'], headers=headers).json()
+                track_info_df = utils.get_track_info(track_info)
+
+                final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
+                
+                st.dataframe(final_df)
+            
+            
+            
+            
+            
+
+#  for track_id_list in unique_tracks_for_api:
+#     req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
+#     feat = req.json()
+#     audio_features_df = pd.DataFrame.from_dict(get_audio_features(feat), orient='index')
+#     audio_features_df.index.name = 'id'
+#     audio_features_df.reset_index(inplace=True)
+
+#     req = requests.get(BASE_URL + 'tracks?ids=' + (','.join(track_id_list)), headers=headers)
+#     feat = req.json()
+#     track_info_df = pd.DataFrame.from_dict(get_track_info(feat), orient='index')
+#     track_info_df.index.name = 'id'
+#     track_info_df.reset_index(inplace=True)           
+            
+            
+            
+            
+            #st.write('beep')
+
+#if audio_features_df['id'].str.contains('0gplL1WMoJ6iYaPgMCL0gX').any():
+#    print(audio_features_df[audio_features_df['id']=='0gplL1WMoJ6iYaPgMCL0gX'])
+    #print('loo')
+
+
+# for item in search['artists']['items'][0:3]:
+#     artist = item['name']
+#     artist_id = item['id']
+#     listy = []
+#     if (st.button(artist)):
+#         top_song = requests.get(BASE_URL + 'artists/' + artist_id +'/top-tracks?market=US', headers=headers).json()['tracks'][0]
+#         audio_feats = requests.get(BASE_URL + 'audio-features/' + top_song['id'], headers=headers).json()
+#         st.dataframe(pd.DataFrame(audio_feats, index=['id']))
         
         #st.write(top_song['name'])
         #st.dataframe(audio_feats)
@@ -342,7 +392,7 @@ for item in search['artists']['items'][0:3]:
 
 
 
-top_song_id = requests.get(BASE_URL + 'artists/4dpARuHxo51G3z768sgnrY/top-tracks?market=US', headers=headers).json()['tracks'][0]
+#top_song_id = requests.get(BASE_URL + 'artists/4dpARuHxo51G3z768sgnrY/top-tracks?market=US', headers=headers).json()['tracks'][0]
 
 #st.write(artist)
 
