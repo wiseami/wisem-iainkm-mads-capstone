@@ -7,6 +7,7 @@ import librosa
 from tqdm import tqdm
 import os
 from collections import defaultdict
+import numpy as np
 
 
 
@@ -29,12 +30,44 @@ def delete_mp3(file):
 # get features from librosa
 def get_features(file):
     y, sr = librosa.load(file)
-    zcr = librosa.feature.zero_crossing_rate(y).mean()
+    S = np.abs(librosa.stft(y)) #spectral magnitude
+    onset_env = librosa.onset.onset_strength(y)
+
+    chroma = librosa.feature.chroma_stft(y=y, sr=sr).mean()
+    chroma_cens = librosa.feature.chroma_cens(y=y, sr=sr).mean()
+    mff = librosa.feature.mfcc(y=y, sr=sr).mean()
+    spec_cen = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
+    spec_band = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
+    spec_cont = librosa.feature.spectral_contrast(S=S, sr=sr).mean()
+    spec_flat = librosa.feature.spectral_flatness(y=y).mean()
     roll = librosa.feature.spectral_rolloff(y).mean()
-    onset = librosa.onset.onset_strength(y).mean()
-    output = {'ZCR': [zcr],
+    poly = librosa.feature.poly_features(S=S, order=1).mean()
+    ton = librosa.feature.tonnetz(y=librosa.effects.harmonic(y), sr=sr).mean()
+    zcr = librosa.feature.zero_crossing_rate(y).mean()
+
+    onset = onset_env.mean()
+    pitch, mag = librosa.piptrack(y=y, sr=sr)
+    pitch = pitch.mean()
+    mag = mag.mean()
+    tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
+
+
+    output = {
+              'chroma': [chroma],
+              'chroma_cens': [chroma_cens],
+              'mff': [mff],
+              'spectral_centroid': [spec_cen],
+              'spectral_bandwidth': [spec_band],
+              'spectral_contrast': [spec_cont],
+              'spectral_flatness': [spec_flat],
               'Spectral_Rolloff': [roll],
-              'Onset_Strength': [onset]
+              'poly_features': [poly],
+              'tonnetz': [ton],
+              'ZCR': [zcr],
+              'onset_strength': [onset],
+              'pitch': [pitch],
+              'magnitude': [mag],
+              'tempo': [tempo]
               }
     return output
 
