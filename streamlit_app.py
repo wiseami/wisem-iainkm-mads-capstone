@@ -6,12 +6,13 @@ import altair as alt
 #from altair.utils.schemapi import SchemaValidationError
 import numpy as np
 import utils
+import pickle
 
 ### Spotify info
 headers, market, SPOTIFY_BASE_URL = utils.spotify_info()
 
 # load necessary data using function
-file_path, top_pl_df, audio_features_df, playlist_data_df, global_lookup, pl_w_audio_feats_df = utils.load_data()
+file_path, top_pl_df, audio_features_df, playlist_data_df, global_lookup, pl_w_audio_feats_df, kmeans_inertia = utils.load_data()
 
 # Normalize spotify audio features and create playlist rollups
 playlist_audio_feature_rollup = utils.normalize_spotify_audio_feats(pl_w_audio_feats_df)
@@ -21,7 +22,7 @@ st.set_page_config(layout="wide")
 st.title('Spotify Streamlit')
 st.write('this is a test')
 st.markdown('---')
-st.header('Top 3 Songs Based on number of playlist appearances')
+st.subheader('Top 3 Songs Based on number of playlist appearances')
 st.write("While the first day of scraping playlists came back with 3,450 total songs, only about half of those were unique. Because of that, we have tons of tracks that show up on multiple playlists. We're looking at a total of 69 daily playlists - 68 country-specific and 1 global - and these songs below show up on multiple different country playlists.")
 
 # st.markdown('---')
@@ -29,32 +30,18 @@ df = pd.DataFrame(playlist_data_df.groupby(['track_name', 'track_artist','track_
 df.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
 df = df.merge(audio_features_df[['id','album_img','preview_url']], how='inner', left_on='Track ID', right_on='id')
 
-col1, col2, col3 = st.columns(3)
+top_songs = st.columns(3)
+for i in range(0,3):
+    top_songs[i].metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][i]))
+    top_songs[i].markdown('**' + df['Artist'][i] + " - " + df['Track Name'][i] + '**')
+    top_songs[i].image(df['album_img'][i])
+    if pd.isna(df['preview_url'][i]) == False:
+        top_songs[i].audio(df['preview_url'][i])
 
-col1.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][0]))
-col1.markdown('**' + df['Artist'][0] + " - " + df['Track Name'][0] + '**')
-col1.image(df['album_img'][0])
-if pd.isna(df['preview_url'][0]) == False:
-     col1.audio(df['preview_url'][0])
-
-col2.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][1]))
-col2.markdown('**' + df['Artist'][1] + " - " + df['Track Name'][1] + '**')
-col2.image(df['album_img'][1])
-if pd.isna(df['preview_url'][1]) == False:
-     col2.audio(df['preview_url'][1])
-
-col3.metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][2]))
-col3.markdown('**' + df['Artist'][2] + " - " + df['Track Name'][2] + '**')
-col3.image(df['album_img'][2])
-if pd.isna(df['preview_url'][2]) == False:
-     col3.audio(df['preview_url'][2])
-
-st.markdown('---')
-
-feature_names_to_show = ['danceability','energy','key','loudness','mode','speechiness','acousticness',
-                'instrumentalness','liveness','valence','tempo']
 
 st.write("Let's take a look at the audio features computed and captured by Spotify for these three songs.")
+feature_names_to_show = ['artist', 'name','danceability','energy','key','loudness','mode','speechiness','acousticness',
+                'instrumentalness','liveness','valence','tempo']
 st.table(audio_features_df[0:3][feature_names_to_show])
 
 feature_names = ['danceability','energy','key','loudness','mode','speechiness','acousticness',
@@ -75,7 +62,10 @@ for feat in feature_names:
         tooltip='country'
     ))
 
-st.write("Knowing we have 69 playlists makes these visuals not-so-easy to consume, but it seemed worth showing the density plots for a couple of audio features across all countries where each line is a country. Definitions on left directly from Spotify's [API documentation.](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-audio-features)")
+st.markdown('---')
+st.header('Density Plots')
+st.write("""Knowing we have 69 playlists makes these visuals not-so-easy to consume, but it seemed worth showing the density plots for a couple of audio features across all countries where each line is a country. 
+            Definitions on left directly from Spotify's [API documentation.](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-audio-features)""")
 
 col1, col2 = st.columns([1,2])
 col1.markdown('**Danceability** - Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.')
@@ -97,10 +87,10 @@ col2.altair_chart(charts[9], use_container_width=True)
 st.markdown('---')
 st.header('Correlations')
 
-res_correlation = playlist_audio_feature_rollup.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
-res_correlation['correlation_label'] = res_correlation['correlation'].map('{:.2f}'.format)
+audio_feat_corr = playlist_audio_feature_rollup.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
+audio_feat_corr['correlation_label'] = audio_feat_corr['correlation'].map('{:.2f}'.format)
 
-base = alt.Chart(res_correlation).encode(
+base = alt.Chart(audio_feat_corr).encode(
     x='variable 2:O',
     y='variable 1:O'    
 )
@@ -151,6 +141,21 @@ with st.expander("Audio feature definitions"):
 
 st.write("It looks like there are a handful of audio features that have high correlations with others.")
 
+st.markdown('---')
+st.header('KMeans')
+st.write('checking inertia and silhouette scores to find best k')
+alt_chart1, alt_chart2 = st.columns(2)
+alt_intertia = alt.Chart(kmeans_inertia[['k','inertia']]).mark_line().encode(
+    x='k:O',
+    y=alt.Y('inertia', scale=alt.Scale(domain=[12000,24000]))
+)
+alt_chart1.altair_chart(alt_intertia)
+
+alt_silhouette = alt.Chart(kmeans_inertia[['k','silhouette_score']]).mark_line().encode(
+    x='k:O',
+    y=alt.Y('silhouette_score', scale=alt.Scale(domain=[.1,.2]))
+)
+alt_chart2.altair_chart(alt_silhouette)
 
 
 st.markdown('---')
@@ -216,10 +221,30 @@ except:
 
 
 
+# st.markdown('---')
+
+# #st.pyplot(chart)
+
+# scaler = pickle.load(open("model/scaler.pkl", "rb"))
+# kmeans = pickle.load(open("model/kmeans.pkl", "rb"))
+
+# X = audio_features_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url'])
+# scaled_data = pd.DataFrame(scaler.transform(X[0:1]))
+# kmeans.predict(scaled_data)
 
 
 
 
+
+# KMeans Clustering
+# kmeans = KMeans(n_clusters=7)
+# kmeans.fit(X_scaled)
+
+# # checking cluster size
+# clusters = kmeans.predict(X_scaled)
+# pd.Series(clusters).value_counts().sort_index()
+# audio_features_df_clustered = audio_features_df.copy()
+# audio_features_df_clustered["cluster"] = clusters
 
 
 

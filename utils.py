@@ -5,6 +5,13 @@ import os
 from sklearn.metrics.pairwise import cosine_similarity
 import sys
 import streamlit as st
+from sklearn.preprocessing import StandardScaler, Normalizer
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+import matplotlib.pyplot as plt
+import numpy as np
+import pickle
+from os.path import exists
 
 update_dttm = datetime.datetime.now()
 
@@ -44,17 +51,19 @@ def load_data():
         audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
         playlist_data_df = pd.read_csv(file_path + 'playlist_data\\2021-11-19.csv')
         global_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
+        kmeans_inertia = pd.read_csv(file_path + 'model\\kmeans_inertia.csv')
     else:
         file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
         top_pl_df = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
         audio_features_df = pd.read_csv(file_path + 'lookups/track_audio_features.csv')
         playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-19.csv')
         global_lookup = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
+        kmeans_inertia = pd.read_csv(file_path + 'model/kmeans_inertia.csv')
     
     pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='inner', left_on='track_id', right_on='id')
     pl_w_audio_feats_df = pl_w_audio_feats_df.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id','name','artist','album_img','preview_url','update_dttm'])
  
-    return file_path, top_pl_df, audio_features_df, playlist_data_df, global_lookup, pl_w_audio_feats_df
+    return file_path, top_pl_df, audio_features_df, playlist_data_df, global_lookup, pl_w_audio_feats_df, kmeans_inertia
 
 
 def normalize_spotify_audio_feats(df):
@@ -124,6 +133,69 @@ def get_track_info(feat):
     track_info_df.index.name = 'id'
     track_info_df.reset_index(inplace=True)
     return track_info_df
+
+def kmeans_prepro_X_scaled(audio_features_df):
+    X = audio_features_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url'])
+    if exists('model/scaler.pkl'):
+        scaler = pickle.load(open("model/scaler.pkl", "rb"))
+    else:
+        scaler = StandardScaler().fit(X)
+    data_scaled = scaler.transform(X)
+    X_scaled = pd.DataFrame(data_scaled)
+    return X_scaled
+
+# KMeans functions
+def kmeans_k_tuning(df, k_min, k_max):
+    #calculating inertia and silhouette scores
+    inertia, silhouette = [], []
+    for k in range(k_min, k_max):
+        kmeans = KMeans(n_clusters=k, random_state=99)
+        kmeans.fit(df)
+        inertia.append(kmeans.inertia_)
+        silhouette.append(silhouette_score(df, kmeans.predict(df)))
+        
+    ine = kmeans_k_tuning_plots(k_min=k_min, k_max=k_max, inertia=inertia, silhouette=silhouette)
+    
+    # storing results in df
+    results = pd.DataFrame({'k': list(range(k_min, k_max)), 'inertia': inertia, 'silhouette_score': silhouette})
+    return results
+
+def kmeans_k_tuning_plots(k_min, k_max, inertia, silhouette):
+    # inertia plot
+    plt.figure(figsize=(16,8))
+    plt.plot(range(k_min, k_max), inertia, 'bx-')
+    plt.title('inertia for k between ' + str(k_min) + ' and ' + str(k_max-1))
+    plt.xlabel('k')
+    plt.ylabel('inertia')
+    plt.xticks(np.arange(k_min, k_max+1, 1.0))
+    plt.show()
+    
+    # silhouette score plot
+    plt.figure(figsize=(16,8))
+    plt.plot(range(k_min, k_max), silhouette, 'bx-')
+    plt.title('silhouette score for k between ' + str(k_min) + ' and ' + str(k_max-1))
+    plt.xlabel('k')
+    plt.ylabel('silhouette score')
+    plt.xticks(np.arange(k_min, k_max+1, 1.0))
+    plt.show()
+    
+    return inertia
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
