@@ -7,6 +7,9 @@ import time
 import json
 import itertools
 import utils
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+import pickle
 
 with open('credentials.json') as creds:
     credentials = json.load(creds)
@@ -40,6 +43,8 @@ playlist_scrape_lookup = pd.read_csv(file_path + 'playlist_data\\playlist_data.c
 playlist_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
 
 unique_tracks = playlist_scrape_lookup['track_id'].unique().tolist()
+existing_audio_features_lookup = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
+unique_tracks = [i for i in unique_tracks if i not in existing_audio_features_lookup['id'].tolist()]
 
 # Create batches of 99 from unique_tracks to pass to the API for rate limit efficiency
 def split(input_list, batch_size):
@@ -62,12 +67,46 @@ for track_id_list in unique_tracks_for_api:
     feat = req.json()
     track_info_df = utils.get_track_info(feat)
 
-    final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
+    final_df = existing_audio_features_lookup.append(audio_features_df.merge(track_info_df, how='inner', on='id')).reset_index(drop=True)
 
-    if exists(file_path + 'lookups\\track_audio_features.csv') is False:
-        final_df.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
+# Create/Fit Scaler and KMeans on audio features
+if len(final_df) > 0:
+    X = final_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'cluster'])
+    scaler = StandardScaler().fit(X)
+    data_scaled = scaler.transform(X)
+    X_scaled = pd.DataFrame(data_scaled)
 
-    else:
-        existing_audio_features_lookup = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
-        new_recs = final_df[~final_df['id'].isin(existing_audio_features_lookup['id'])]
-        new_recs.to_csv(file_path + 'lookups\\track_audio_features.csv', mode='a',header=False, index=False)
+    k_scores = utils.kmeans_k_tuning(X_scaled, 2, 16)
+    k_scores.to_csv('model/kmeans_inertia.csv', index=False)
+
+    kmeans = KMeans(n_clusters=7) # 7 clusters was best as of 11/22/21
+    kmeans.fit(X_scaled)
+
+    # dump models to pickles for later use
+    pickle.dump(scaler, open("model/scaler.pkl", "wb"))
+    pickle.dump(kmeans, open("model/kmeans.pkl", "wb"))
+
+    # checking cluster size
+    clusters = kmeans.predict(X_scaled)
+    pd.Series(clusters).value_counts().sort_index()
+    audio_features_df_clustered = final_df.copy()
+    audio_features_df_clustered["cluster"] = clusters
+    audio_features_df_clustered.to_csv(file_path + 'lookups\\track_audio_features.csv', index=False)
+
+# # For visualizing silhouette scores
+# from yellowbrick.cluster import SilhouetteVisualizer
+# import matplotlib.pyplot as plt
+
+# fig, ax = plt.subplots(6, 2, figsize=(24,24))
+# for i in [2, 3, 4, 5, 6,7,8,9,10,11,12]:
+#     '''
+#     Create KMeans instance for different number of clusters
+#     '''
+#     km = KMeans(n_clusters=i, init='k-means++', n_init=10, max_iter=100, random_state=42)
+#     q, mod = divmod(i, 2)
+#     '''
+#     Create SilhouetteVisualizer instance with KMeans instance
+#     Fit the visualizer
+#     '''
+#     visualizer = SilhouetteVisualizer(km, colors='yellowbrick', ax=ax[q-1][mod])
+#     visualizer.fit(X_scaled)
