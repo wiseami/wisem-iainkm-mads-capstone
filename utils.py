@@ -11,7 +11,7 @@ from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
-from os.path import exists
+# from os.path import exists
 
 update_dttm = datetime.datetime.now()
 
@@ -134,15 +134,15 @@ def get_track_info(feat):
     track_info_df.reset_index(inplace=True)
     return track_info_df
 
-def kmeans_prepro_X_scaled(audio_features_df):
-    X = audio_features_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url'])
-    if exists('model/scaler.pkl'):
-        scaler = pickle.load(open("model/scaler.pkl", "rb"))
-    else:
-        scaler = StandardScaler().fit(X)
-    data_scaled = scaler.transform(X)
-    X_scaled = pd.DataFrame(data_scaled)
-    return X_scaled
+# def kmeans_prepro_X_scaled(audio_features_df):
+#     X = audio_features_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url'])
+#     if exists('model/scaler.pkl'):
+#         scaler = pickle.load(open("model/scaler.pkl", "rb"))
+#     else:
+#         scaler = StandardScaler().fit(X)
+#     data_scaled = scaler.transform(X)
+#     X_scaled = pd.DataFrame(data_scaled)
+#     return X_scaled
 
 # KMeans functions
 def kmeans_k_tuning(df, k_min, k_max):
@@ -181,23 +181,17 @@ def kmeans_k_tuning_plots(k_min, k_max, inertia, silhouette):
     
     return inertia
 
+def do_kmeans_on_fly(track_df):
+    X = track_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url'])
+    scaler = pickle.load(open("model/scaler.pkl", "rb"))
+    data_scaled = scaler.transform(X)
+    X_scaled = pd.DataFrame(data_scaled)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    kmeans = pickle.load(open("model/kmeans.pkl", "rb"))
+    clusters = kmeans.predict(X_scaled)
+    audio_features_df_clustered = track_df.copy()
+    audio_features_df_clustered["cluster"] = clusters
+    return audio_features_df_clustered
 
 
 
@@ -208,7 +202,7 @@ def create_cossim_df(df, res, global_lookup):
     res = df of normalized audio features by country/playlist
     global_lookup = df of global lookup csv
     """
-    cossim_df = df.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url'])
+    cossim_df = df.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url', 'cluster'])
     cossim_df_y = cossim_df.id
     cossim_df['duration_m'] = cossim_df['duration_ms'] / 1000 / 60
     cossim_df['danceability'] = cossim_df['danceability'] / cossim_df['duration_m']
