@@ -13,7 +13,8 @@ import numpy as np
 
 def load_tracks(list_file_name):
     df = pd.read_csv(list_file_name)
-    df = df[df['track_preview_url'].notna()]
+    df = df[df['preview_url'].notna()]
+    df.rename(columns={'id': 'track_id'}, inplace=True)
     return df
 
 
@@ -82,11 +83,13 @@ def process_tracks(source_file, end_file, max_rows=0):
     features_dict = defaultdict(list)
     source_df = load_tracks(source_file)
 
+    # handle limiting the number of rows to process for testing purposes
     if max_rows > 0:
         source_df = source_df.head(max_rows)
     else:
         source_df = source_df
 
+    # handle creating a file if it doesn't already exist
     if not os.path.isfile(end_file):
         # global new
         print('{} does not exist. Creating new file from scratch.'.format(end_file))
@@ -97,44 +100,56 @@ def process_tracks(source_file, end_file, max_rows=0):
         end_df = pd.read_csv(end_file)
         tracks = source_df[~source_df['track_id'].isin(end_df['track_id'])]
 
+
+
     if len(tracks) > 0:
         # global df_feat
         total = len(tracks)
-        for num, tup in enumerate(tracks.iterrows()):
-            idx, row = tup
-            print('Processing track {} of {}.'.format(num+1, total))
-            track_id = row.track_id
-            url = row.track_preview_url
-            audio_folder = 'audio_files/'
-            file_name = str(track_id)+'.mp3'
-            audio_file = audio_folder+file_name
+        print('{} tracks to process'.format(total))
+        batchsize = 50
+        for i in range(0, total, batchsize):
+            features_dict = defaultdict(list)
+            if i+batchsize > total:
+                batch = tracks.iloc[i: -1]
+            else:
+                batch = tracks.iloc[i: i+batchsize]
+            for num, tup in enumerate(batch.iterrows()):
+                idx, row = tup
+                # print('Processing track {} of {}.'.format(num+1, total))
+                track_id = row.track_id
+                url = row.preview_url
+                audio_folder = 'audio_files/'
+                file_name = str(track_id)+'.mp3'
+                audio_file = audio_folder+file_name
 
-            extract_mp3(url, audio_folder, file_name)
+                extract_mp3(url, audio_folder, file_name)
 
-            temp_features = get_features(audio_file)
+                temp_features = get_features(audio_file)
 
-            features_dict['track_id'].append(track_id)
-            for key, value in temp_features.items():
-                features_dict[key].append(value)
+                features_dict['track_id'].append(track_id)
+                for key, value in temp_features.items():
+                    features_dict[key].append(value)
 
-            delete_mp3(audio_file)
-        df_feat = pd.DataFrame(features_dict)
+                delete_mp3(audio_file)
+            df_feat = pd.DataFrame(features_dict)
 
-        if new:
-            df_feat.to_csv(end_file, index=False)
-            return df_feat
-        else:
-            end_df = end_df.append(df_feat, ignore_index=True)
-            end_df.to_csv(end_file, index=False)
-            return end_df
+            if not os.path.isfile(end_file):
+                df_feat.to_csv(end_file, index=False)
+                # return df_feat
+            else:
+                end_df = end_df.append(df_feat, ignore_index=True)
+                end_df.to_csv(end_file, index=False)
+                # return end_df
+            print('Tracks {} through {} finished.'.format(i, i+batchsize))
     else:
         print('No new tracks to process.')
+    print('Feature extraction function complete.')
 
 
-source_file = 'playlist_data/playlist_data.csv'
+source_file = 'lookups/track_audio_features.csv'
 end_file = 'lookups/MIR_features.csv'
 
-print(process_tracks(source_file, end_file, max_rows=100))
+print(process_tracks(source_file, end_file))
 
 
 
