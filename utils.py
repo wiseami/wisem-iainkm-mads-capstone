@@ -47,23 +47,21 @@ def spotify_info():
 def load_data():
     if sys.platform == 'win32':
         file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'
-        top_pl_df = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
         audio_features_df = pd.read_csv(file_path + 'lookups\\track_audio_features.csv')
         playlist_data_df = pd.read_csv(file_path + 'playlist_data\\2021-11-19.csv')
-        global_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
+        global_pl_lookup = pd.read_csv(file_path + 'lookups\\global_top_daily_playlists.csv')
         kmeans_inertia = pd.read_csv(file_path + 'model\\kmeans_inertia.csv')
     else:
         file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
-        top_pl_df = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
         audio_features_df = pd.read_csv(file_path + 'lookups/track_audio_features.csv')
         playlist_data_df = pd.read_csv(file_path + 'playlist_data/2021-11-19.csv')
-        global_lookup = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
+        global_pl_lookup = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
         kmeans_inertia = pd.read_csv(file_path + 'model/kmeans_inertia.csv')
     
     pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='inner', left_on='track_id', right_on='id')
     pl_w_audio_feats_df = pl_w_audio_feats_df.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id','name','artist','album_img','preview_url','update_dttm'])
  
-    return file_path, top_pl_df, audio_features_df, playlist_data_df, global_lookup, pl_w_audio_feats_df, kmeans_inertia
+    return file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia
 
 
 def normalize_spotify_audio_feats(df):
@@ -88,7 +86,7 @@ def normalize_spotify_audio_feats(df):
     res['valence'] = res['valence_sum'] / res['duration_m']
     res['tempo'] = res['tempo_sum'] / res['duration_m']
 
-    playlist_audio_feature_rollup = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m'])
+    playlist_audio_feature_rollup = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m', 'cluster_sum','cluster_count'])
     return playlist_audio_feature_rollup
 
 

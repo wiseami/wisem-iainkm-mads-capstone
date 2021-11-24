@@ -12,15 +12,22 @@ import pickle
 headers, market, SPOTIFY_BASE_URL = utils.spotify_info()
 
 # load necessary data using function
-file_path, top_pl_df, audio_features_df, playlist_data_df, global_lookup, pl_w_audio_feats_df, kmeans_inertia = utils.load_data()
+file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia = utils.load_data()
 
 # Normalize spotify audio features and create playlist rollups
 playlist_audio_feature_rollup = utils.normalize_spotify_audio_feats(pl_w_audio_feats_df)
 
 ### Start building out Streamlit assets
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide",
+    menu_items = {'About':"Capstone project for University of Michigan's Master of Applied Data Science program by Mike Wise and Iain King-Moore"}
+    )
+
+st.sidebar.write("Testing Sidebar")
+show_source_code = st.sidebar.checkbox("Show Source Code", True)
+#st.sidebar.button()
+
 st.title('Spotify Streamlit')
-st.write('this is a test')
 st.markdown('---')
 st.subheader('Top 3 Songs Based on number of playlist appearances')
 st.write("While the first day of scraping playlists came back with 3,450 total songs, only about half of those were unique. Because of that, we have tons of tracks that show up on multiple playlists. We're looking at a total of 69 daily playlists - 68 country-specific and 1 global - and these songs below show up on multiple different country playlists.")
@@ -43,6 +50,28 @@ st.write("Let's take a look at the audio features computed and captured by Spoti
 feature_names_to_show = ['artist', 'name','danceability','energy','key','loudness','mode','speechiness','acousticness',
                 'instrumentalness','liveness','valence','tempo']
 st.table(audio_features_df[0:3][feature_names_to_show])
+
+st.write('testing different ways to show code if we want')
+if show_source_code:
+    st.subheader("Source code")
+    st.code("""top_songs = st.columns(3)
+for i in range(0,3):
+    top_songs[i].metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][i]))
+    top_songs[i].markdown('**' + df['Artist'][i] + " - " + df['Track Name'][i] + '**')
+    top_songs[i].image(df['album_img'][i])
+    if pd.isna(df['preview_url'][i]) == False:
+        top_songs[i].audio(df['preview_url'][i])
+    """)
+
+with st.expander("Source Code"):
+    st.code("""top_songs = st.columns(3)
+for i in range(0,3):
+    top_songs[i].metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][i]))
+    top_songs[i].markdown('**' + df['Artist'][i] + " - " + df['Track Name'][i] + '**')
+    top_songs[i].image(df['album_img'][i])
+    if pd.isna(df['preview_url'][i]) == False:
+        top_songs[i].audio(df['preview_url'][i])
+    """)
 
 feature_names = ['danceability','energy','key','loudness','mode','speechiness','acousticness',
                 'instrumentalness','liveness','valence','tempo', 'duration_ms', 'country']
@@ -119,6 +148,47 @@ col1, col2 = st.columns([1,2])
 col1.write("Now, let's take country out of the equation and have a closer look at the different individual audio features and how they correlate with one another. In this case, we created an aggregate country-playlist value of each of the individual song audio features and normalized for total duration of the playlist.")
 col2.altair_chart(cor_plot + text, use_container_width=True)
 
+
+col1, col2 = st.columns([1,2])
+country_selector = global_pl_lookup['country'].tolist()
+choice = col1.selectbox('pick a country', country_selector)
+choice_df = pl_w_audio_feats_df[pl_w_audio_feats_df['country'] == choice].drop(columns=['cluster','duration_ms'])
+audio_feat_corr = choice_df.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
+audio_feat_corr['correlation_label'] = audio_feat_corr['correlation'].map('{:.2f}'.format)
+
+base = alt.Chart(audio_feat_corr).encode(
+    x='variable 2:O',
+    y='variable 1:O'    
+)
+
+# Text layer with correlation labels
+# Colors are for easier readability
+text = base.mark_text().encode(
+    text=alt.condition(
+        alt.datum.correlation == 1,
+        alt.value(''),
+        'correlation_label'
+    ),
+    color=alt.condition(
+        alt.datum.correlation > 0.5, 
+        alt.value('white'),
+        alt.value('black')
+    )
+)
+
+# The correlation heatmap itself
+cor_plot = base.mark_rect().encode(
+    color=alt.Color('correlation:Q', scale=alt.Scale(scheme='greenblue'))
+)
+
+col1.write("Pick any of the markets Spotify generates a playlist for to see how the different features correlate to one another just within that market.")
+col2.altair_chart(cor_plot + text, use_container_width=True)
+
+
+
+
+
+
 audio_feat_dict = {
     "Acousticness":"A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic.",
     "Danceability":"Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.",
@@ -171,6 +241,8 @@ search = search.json()
 feats_to_show_streamlit = ['artist', 'name','danceability','energy','key','loudness','mode','speechiness','acousticness',
                 'instrumentalness','liveness','valence', 'album_img','preview_url']
 
+
+    
 for item in search['artists']['items'][0:1]:
     searchy = requests.get(SPOTIFY_BASE_URL + 'artists/' + item['id'] + '/top-tracks?market=US', headers=headers).json()
     st.write('Pick one of these top 5 songs for this artist.')
@@ -191,40 +263,6 @@ for item in search['artists']['items'][0:1]:
                 final_df = utils.do_kmeans_on_fly(final_df)
                 st.write('grabbed from API')
                 st.dataframe(final_df[feats_to_show_streamlit])
-
-# once a button has been clicked, show the results on the page
-# try:
-#     st.markdown('---')
-#     st.write('Recommendations')
-#     compare, cossim_df, compare_df_sort = utils.create_cossim_df(final_df, playlist_audio_feature_rollup, global_lookup)
-
-#     col1, col2, col3,col4 = st.columns([4,3,3,3])
-#     col1.write(cossim_df['name'].iloc[0])
-#     col1.image(cossim_df['album_img'].iloc[0])
-#     col1.audio(cossim_df['preview_url'].iloc[0])
-
-#     #col2.markdown([compare_df_sort['name'].iloc[0]](compare_df_sort['link'].iloc[0]))
-#     col2.image(compare_df_sort['playlist_img'].iloc[0])
-#     col2.markdown("[link](" + compare_df_sort['link'].iloc[0] + ")")
-#     col2.write(compare_df_sort['sim'].iloc[0])
-#     #col2.markdown("[this is an image link]" + col2.image(compare_df_sort['playlist_img'].iloc[0]) + "(" + compare_df_sort['link'].iloc[0] + ")")
-#     col3.image(compare_df_sort['playlist_img'].iloc[1])
-#     col3.markdown("[link](" + compare_df_sort['link'].iloc[1] + ")")
-#     col3.write(compare_df_sort['sim'].iloc[1])
-#     col4.image(compare_df_sort['playlist_img'].iloc[2])
-#     col4.markdown("[link](" + compare_df_sort['link'].iloc[2] + ")")
-#     col4.write(compare_df_sort['sim'].iloc[2])
-# except:
-#     pass
-
-# audio_feats = requests.get(SPOTIFY_BASE_URL + 'audio-features?ids=7GgWAITsYJaRM3r50rfh5w' , headers=headers).json()
-# audio_features_df = utils.get_audio_features(audio_feats)
-
-# track_info = requests.get(SPOTIFY_BASE_URL + 'tracks?ids=7GgWAITsYJaRM3r50rfh5w', headers=headers).json()
-# track_info_df = utils.get_track_info(track_info)
-
-# final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
-# final_df = utils.do_kmeans_on_fly(final_df)
 
 try:
     st.markdown('---')
@@ -259,35 +297,63 @@ try:
     compare_df['id'] = compare_df_y
     compare_df = compare_df.merge(final_df[['id','name','artist','album_img','preview_url']], how='inner', on='id')
 
-    col1, col2, col3,col4 = st.columns([4,3,3,3])
-    col1.write(compare_df['name'].iloc[0])
+    col1, col2 = st.columns([1,1])
+    col1.markdown("If you like: *" + compare_df['name'].iloc[0] + "* by " + compare_df['artist'].iloc[0])
     col1.image(compare_df['album_img'].iloc[0])
     col1.audio(compare_df['preview_url'].iloc[0])
 
 
 
-    final_playlist = global_lookup[global_lookup['country']==tops['country'].item()]
+    final_playlist = global_pl_lookup[global_pl_lookup['country']==tops['country'].item()]
+    col2.markdown("You might like: ["+ final_playlist['name'].item() +"](" + final_playlist['link'].item() + ")")
     col2.image(final_playlist['playlist_img'].item())
+    #col2.markdown("[![this is an image link]("+final_playlist['playlist_img'].item()+")]("+final_playlist['link'].item()+")")
     col2.dataframe(cossim_df_sort[feats_to_show_streamlit])
 
-    #col2.markdown([compare_df_sort['name'].iloc[0]](compare_df_sort['link'].iloc[0]))
-    col2.image(cossim_df_sort['playlist_img'].iloc[0])
-    col2.markdown("[link](" + cossim_df_sort['link'].iloc[0] + ")")
-    col2.write(cossim_df_sort['sim'].iloc[0])
-    #col2.markdown("[this is an image link]" + col2.image(compare_df_sort['playlist_img'].iloc[0]) + "(" + compare_df_sort['link'].iloc[0] + ")")
-    col3.image(cossim_df_sort['playlist_img'].iloc[1])
-    col3.markdown("[link](" + cossim_df_sort['link'].iloc[1] + ")")
-    col3.write(cossim_df_sort['sim'].iloc[1])
-    col4.image(cossim_df_sort['playlist_img'].iloc[2])
-    col4.markdown("[link](" + cossim_df_sort['link'].iloc[2] + ")")
-    col4.write(cossim_df_sort['sim'].iloc[2])
-
-
-
+    for x in cossim_df_sort[feats_to_show_streamlit].index:
+        col2.write(cossim_df_sort[feats_to_show_streamlit]['artist'].iloc[x] + " - " + cossim_df_sort[feats_to_show_streamlit]['name'].iloc[x])
+        if pd.isna(cossim_df_sort[feats_to_show_streamlit]['preview_url'].iloc[x]) == False:
+            col2.audio(cossim_df_sort[feats_to_show_streamlit]['preview_url'].iloc[x])
 except:
-    st.markdown('broken')
     pass
+st.markdown('---')
+st.subheader('Wait, how did you do that?')
 
+
+
+# once a button has been clicked, show the results on the page
+# try:
+#     st.markdown('---')
+#     st.write('Recommendations')
+#     compare, cossim_df, compare_df_sort = utils.create_cossim_df(final_df, playlist_audio_feature_rollup, global_pl_lookup)
+
+#     col1, col2, col3,col4 = st.columns([4,3,3,3])
+#     col1.write(cossim_df['name'].iloc[0])
+#     col1.image(cossim_df['album_img'].iloc[0])
+#     col1.audio(cossim_df['preview_url'].iloc[0])
+
+#     #col2.markdown([compare_df_sort['name'].iloc[0]](compare_df_sort['link'].iloc[0]))
+#     col2.image(compare_df_sort['playlist_img'].iloc[0])
+#     col2.markdown("[link](" + compare_df_sort['link'].iloc[0] + ")")
+#     col2.write(compare_df_sort['sim'].iloc[0])
+#     #col2.markdown("[this is an image link]" + col2.image(compare_df_sort['playlist_img'].iloc[0]) + "(" + compare_df_sort['link'].iloc[0] + ")")
+#     col3.image(compare_df_sort['playlist_img'].iloc[1])
+#     col3.markdown("[link](" + compare_df_sort['link'].iloc[1] + ")")
+#     col3.write(compare_df_sort['sim'].iloc[1])
+#     col4.image(compare_df_sort['playlist_img'].iloc[2])
+#     col4.markdown("[link](" + compare_df_sort['link'].iloc[2] + ")")
+#     col4.write(compare_df_sort['sim'].iloc[2])
+# except:
+#     pass
+
+# audio_feats = requests.get(SPOTIFY_BASE_URL + 'audio-features?ids=7GgWAITsYJaRM3r50rfh5w' , headers=headers).json()
+# audio_features_df = utils.get_audio_features(audio_feats)
+
+# track_info = requests.get(SPOTIFY_BASE_URL + 'tracks?ids=7GgWAITsYJaRM3r50rfh5w', headers=headers).json()
+# track_info_df = utils.get_track_info(track_info)
+
+# final_df = audio_features_df.merge(track_info_df, how='inner', on='id')
+# final_df = utils.do_kmeans_on_fly(final_df)
 
 # songs_from_cluster_pl = pl_feat_merge[pl_feat_merge['country'] == tops['country'].item()].reset_index(drop=True)
 # songs_from_cluster_pl.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url', 'cluster'])
