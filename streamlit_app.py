@@ -152,7 +152,8 @@ col2.altair_chart(cor_plot + text, use_container_width=True)
 col1, col2 = st.columns([1,2])
 country_selector = global_pl_lookup['country'].tolist()
 choice = col1.selectbox('pick a country', country_selector)
-choice_df = pl_w_audio_feats_df[pl_w_audio_feats_df['country'] == choice].drop(columns=['cluster','duration_ms'])
+choice_df = pl_w_audio_feats_df[pl_w_audio_feats_df['country'] == choice]#.drop(columns=['cluster','duration_ms'])
+choice_df = utils.normalize_spotify_audio_feats_2(choice_df)
 audio_feat_corr = choice_df.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
 audio_feat_corr['correlation_label'] = audio_feat_corr['correlation'].map('{:.2f}'.format)
 
@@ -234,14 +235,12 @@ st.write('next is to get cossim on the fly')
 #### testing search bar idea
 search_term = st.text_input('Search an artist', 'Adele')
 
-#search_term = 'Adele'
+#search_term = 'Adele' #only here for testing
 search = requests.get(SPOTIFY_BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
 search = search.json()
 
 feats_to_show_streamlit = ['artist', 'name','danceability','energy','key','loudness','mode','speechiness','acousticness',
                 'instrumentalness','liveness','valence', 'album_img','preview_url']
-
-
     
 for item in search['artists']['items'][0:1]:
     searchy = requests.get(SPOTIFY_BASE_URL + 'artists/' + item['id'] + '/top-tracks?market=US', headers=headers).json()
@@ -275,12 +274,12 @@ try:
     tops = clusters_by_country[clusters_by_country['cluster']==final_df['cluster'].item()].sort_values(by='id', ascending=False)[0:1]
     top_pl_track_ids = playlist_data_df[playlist_data_df['country'] == tops['country'].item()]['track_id']
     cossim_df = audio_features_df[audio_features_df['id'].isin(top_pl_track_ids)]
-    cossim_df = cossim_df.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url', 'cluster'])
+    cossim_df = cossim_df.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url', 'cluster', 'popularity'])
     cossim_df_y = cossim_df['id']
     cossim_df = cossim_df.drop(columns=['id','tempo','duration_ms'])
 
     compare_df = final_df.copy()
-    compare_df = compare_df.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url', 'cluster'])
+    compare_df = compare_df.drop(columns=['update_dttm', 'time_signature', 'name','artist','album_img','preview_url', 'cluster', 'popularity'])
     compare_df_y = compare_df['id']
     compare_df = compare_df.drop(columns=['id','tempo','duration_ms'])
 

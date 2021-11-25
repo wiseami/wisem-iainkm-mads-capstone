@@ -85,8 +85,29 @@ def normalize_spotify_audio_feats(df):
     res['liveness'] = res['liveness_sum'] / res['duration_m']
     res['valence'] = res['valence_sum'] / res['duration_m']
     res['tempo'] = res['tempo_sum'] / res['duration_m']
+    res['popularity'] = res['popularity_sum'] / res['duration_m']
 
-    playlist_audio_feature_rollup = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m', 'cluster_sum','cluster_count'])
+    playlist_audio_feature_rollup = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m', 'cluster_sum','cluster_count', 'popularity_sum','popularity_count'])
+    return playlist_audio_feature_rollup
+
+
+def normalize_spotify_audio_feats_2(df):
+    ### Create Spotify audio features normalized for playlist length
+    df = df.copy()
+    df['duration_m'] = df['duration_ms'] / 1000 / 60
+    df['danceability'] = df['danceability'] / df['duration_m']
+    df['energy'] = df['energy'] / df['duration_m']
+    df['key'] = df['key'] / df['duration_m']
+    df['loudness'] = df['loudness'] / df['duration_m']
+    df['mode'] = df['mode'] / df['duration_m']
+    df['speechiness'] = df['speechiness'] / df['duration_m']
+    df['acousticness'] = df['acousticness'] / df['duration_m']
+    df['instrumentalness'] = df['instrumentalness'] / df['duration_m']
+    df['liveness'] = df['liveness'] / df['duration_m']
+    df['valence'] = df['valence'] / df['duration_m']
+    df['tempo'] = df['tempo'] / df['duration_m']
+    df['popularity'] = df['popularity'] / df['duration_m']
+    playlist_audio_feature_rollup = df.drop(columns=['duration_ms','duration_m','cluster'])
     return playlist_audio_feature_rollup
 
 
@@ -125,7 +146,8 @@ def get_track_info(feat):
                                    'artist': track['artists'][0]['name'],
                                    'album_img': track['album']['images'][0]['url'],
                                    #'artist_img': track['artists'][0]['images'][0]['url'],
-                                   'preview_url': track['preview_url']
+                                   'preview_url': track['preview_url'],
+                                   'popularity': track['popularity']
                                   }
     track_info_df = pd.DataFrame.from_dict(track_list, orient='index')
     track_info_df.index.name = 'id'
@@ -180,7 +202,7 @@ def kmeans_k_tuning_plots(k_min, k_max, inertia, silhouette):
     return inertia
 
 def do_kmeans_on_fly(track_df):
-    X = track_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url'])
+    X = track_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'popularity'])
     scaler = pickle.load(open("model/scaler.pkl", "rb"))
     data_scaled = scaler.transform(X)
     X_scaled = pd.DataFrame(data_scaled)

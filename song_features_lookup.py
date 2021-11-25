@@ -57,6 +57,7 @@ unique_tracks_for_api = list(split(unique_tracks, batch_size))
 
 update_dttm = datetime.datetime.now()
 
+final_df = pd.DataFrame(columns=['id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity'])
 # Pull audio features using track dict and write/append to file
 for track_id_list in unique_tracks_for_api:
     req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
@@ -66,12 +67,13 @@ for track_id_list in unique_tracks_for_api:
     req = requests.get(BASE_URL + 'tracks?ids=' + (','.join(track_id_list)), headers=headers)
     feat = req.json()
     track_info_df = utils.get_track_info(feat)
+    final_df = final_df.append(audio_features_df.merge(track_info_df, how='inner', on='id'), ignore_index=True)
 
-    final_df = existing_audio_features_lookup.append(audio_features_df.merge(track_info_df, how='inner', on='id')).reset_index(drop=True)
+final_df = existing_audio_features_lookup.append(audio_features_df.merge(track_info_df, how='inner', on='id')).reset_index(drop=True)
 
 # Create/Fit Scaler and KMeans on audio features
 if len(final_df) > 0:
-    X = final_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'cluster'])
+    X = final_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'popularity'])
     scaler = StandardScaler().fit(X)
     data_scaled = scaler.transform(X)
     X_scaled = pd.DataFrame(data_scaled)
@@ -110,3 +112,13 @@ if len(final_df) > 0:
 #     '''
 #     visualizer = SilhouetteVisualizer(km, colors='yellowbrick', ax=ax[q-1][mod])
 #     visualizer.fit(X_scaled)
+
+
+# for track_id_list in unique_tracks_for_api[0]:
+#     req = requests.get(BASE_URL + 'tracks?ids=' + '0gplL1WMoJ6iYaPgMCL0gX,2Xr1dTzJee307rmrkt8c0g', headers=headers)
+#     feat = req.json()
+
+#     for t in feat['tracks']:
+#         print(t['popularity'])
+
+#     track_info_df = utils.get_track_info(feat)
