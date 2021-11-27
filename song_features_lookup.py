@@ -58,6 +58,7 @@ unique_tracks_for_api = list(split(unique_tracks, batch_size))
 update_dttm = datetime.datetime.now()
 
 final_df = pd.DataFrame(columns=['id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity'])
+
 # Pull audio features using track dict and write/append to file
 for track_id_list in unique_tracks_for_api:
     req = requests.get(BASE_URL + 'audio-features?ids=' + (','.join(track_id_list)), headers=headers)
@@ -112,13 +113,3 @@ if len(final_df) > 0:
 #     '''
 #     visualizer = SilhouetteVisualizer(km, colors='yellowbrick', ax=ax[q-1][mod])
 #     visualizer.fit(X_scaled)
-
-
-# for track_id_list in unique_tracks_for_api[0]:
-#     req = requests.get(BASE_URL + 'tracks?ids=' + '0gplL1WMoJ6iYaPgMCL0gX,2Xr1dTzJee307rmrkt8c0g', headers=headers)
-#     feat = req.json()
-
-#     for t in feat['tracks']:
-#         print(t['popularity'])
-
-#     track_info_df = utils.get_track_info(feat)

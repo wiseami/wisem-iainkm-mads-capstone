@@ -15,7 +15,6 @@ import pickle
 
 update_dttm = datetime.datetime.now()
 
-
 def spotify_info():
     # with open('credentials.json') as creds:
     #    credentials = json.load(creds)
@@ -58,9 +57,18 @@ def load_data():
         global_pl_lookup = pd.read_csv(file_path + 'lookups/global_top_daily_playlists.csv')
         kmeans_inertia = pd.read_csv(file_path + 'model/kmeans_inertia.csv')
     
-    pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='inner', left_on='track_id', right_on='id')
+    pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='right', left_on='track_id', right_on='id')
+    pl_w_audio_feats_df['pl_count'] = pl_w_audio_feats_df.groupby('track_id')['country'].transform('size')
+
+    audio_feat_cols = ['id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity','cluster', 'pl_count']
+    audio_features_df = pl_w_audio_feats_df.copy().reset_index(drop=True)
+    audio_features_df.drop(audio_features_df.columns.difference(audio_feat_cols), 1, inplace=True)
+    audio_features_df.drop_duplicates(subset=['id'], inplace=True)
+    audio_features_df.reset_index(inplace=True, drop=True)
+
     pl_w_audio_feats_df = pl_w_audio_feats_df.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id','name','artist','album_img','preview_url','update_dttm'])
- 
+    pl_w_audio_feats_df = pl_w_audio_feats_df.dropna(how='any', subset=['country']).reset_index(drop=True)
+
     return file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia
 
 
@@ -86,6 +94,7 @@ def normalize_spotify_audio_feats(df):
     res['valence'] = res['valence_sum'] / res['duration_m']
     res['tempo'] = res['tempo_sum'] / res['duration_m']
     res['popularity'] = res['popularity_sum'] / res['duration_m']
+    res['pl_count'] = res['pl_count_sum'] / res['duration_m']
 
     playlist_audio_feature_rollup = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m', 'cluster_sum','cluster_count', 'popularity_sum','popularity_count'])
     return playlist_audio_feature_rollup
@@ -107,6 +116,7 @@ def normalize_spotify_audio_feats_2(df):
     df['valence'] = df['valence'] / df['duration_m']
     df['tempo'] = df['tempo'] / df['duration_m']
     df['popularity'] = df['popularity'] / df['duration_m']
+    df['pl_count'] = df['pl_count'] / df['duration_m']
     playlist_audio_feature_rollup = df.drop(columns=['duration_ms','duration_m','cluster'])
     return playlist_audio_feature_rollup
 
