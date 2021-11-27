@@ -175,7 +175,6 @@ with st.container():
         st.session_state['corr_plot'] = cor_plot
 
     col2.altair_chart(st.session_state.corr_plot + text, use_container_width=True)
-    st.write(st.session_state)
 
     audio_feat_corr_ct2 = audio_feat_corr.copy()[(audio_feat_corr['variable 1']=='pl_count') | (audio_feat_corr['variable 1']=='popularity')]
     audio_feat_corr_ct2['correlation_label'] = audio_feat_corr_ct2['correlation'].map('{:.2f}'.format)
