@@ -286,7 +286,7 @@ with st.container():
 
     col1, col3, col2 = st.columns([3,1,7])
     col1.write("Now, let's take country out of the equation and have a closer look at the different individual audio features across all distinct tracks.")
-    col2.altair_chart(st.session_state.corr_plot + text, use_container_width=True)
+    col2.altair_chart(cor_plot + text, use_container_width=True)
 
     base = alt.Chart(audio_feat_corr_ct2).encode(
         x='variable 2:O',
