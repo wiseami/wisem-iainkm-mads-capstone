@@ -7,6 +7,10 @@ import altair as alt
 import numpy as np
 import utils
 import pickle
+import sys
+import os
+from datetime import datetime as dt
+from os.path import exists
 
 ### Start building out Streamlit assets
 st.set_page_config(
@@ -14,16 +18,85 @@ st.set_page_config(
     menu_items = {'About':"Capstone project for University of Michigan's Master of Applied Data Science program by Mike Wise and Iain King-Moore"}
     )
 
-### App config stuff
+now = dt.now()
+
+### App config stuff - Loading data, creating data caches, etc.
 with st.container():
     # Spotify info
     headers, market, SPOTIFY_BASE_URL = utils.spotify_info()
 
+    # Function to load and cache data for streamlit performance
+    @st.experimental_memo(ttl=86400)
+    def load_data():
+        file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
+        if exists('st_support_files/audio_features_df.csv') and exists('st_support_files/pl_w_audio_feats_df.csv'):
+            if (now - dt.fromtimestamp(os.path.getmtime('st_support_files/audio_features_df.csv'))).days < 1:
+                audio_features_df = pd.read_csv('st_support_files/audio_features_df.csv')
+                pl_w_audio_feats_df = pd.read_csv('st_support_files/pl_w_audio_feats_df.csv')
+                playlist_data_df = pd.read_csv('playlist_data/2021-11-19.csv')
+            
+            else:
+                audio_features_df = pd.read_csv('lookups/track_audio_features.csv')
+                playlist_data_df = pd.read_csv('playlist_data/2021-11-19.csv')
+
+                pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='right', left_on='track_id', right_on='id')
+                pl_w_audio_feats_df['pl_count'] = pl_w_audio_feats_df.groupby('track_id')['country'].transform('size')
+
+                audio_feat_cols = ['id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity','cluster', 'pl_count']
+                audio_features_df = pl_w_audio_feats_df.copy().reset_index(drop=True)
+                audio_features_df.drop(audio_features_df.columns.difference(audio_feat_cols), 1, inplace=True)
+                audio_features_df.drop_duplicates(subset=['id'], inplace=True)
+                audio_features_df.reset_index(inplace=True, drop=True)
+
+                pl_w_audio_feats_df = pl_w_audio_feats_df.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id','name','artist','album_img','preview_url','update_dttm'])
+                pl_w_audio_feats_df = pl_w_audio_feats_df.dropna(how='any', subset=['country']).reset_index(drop=True)
+
+                audio_features_df.to_csv('st_support_files/audio_features_df.csv')
+                pl_w_audio_feats_df.to_csv('st_support_files/pl_w_audio_feats_df.csv')
+        
+        global_pl_lookup = pd.read_csv('lookups/global_top_daily_playlists.csv')
+        kmeans_inertia = pd.read_csv('model/kmeans_inertia.csv')
+
+        return file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia
+
     # load necessary data using function
-    file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia = utils.load_data()
+    file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia = load_data()
 
     # Normalize spotify audio features and create playlist rollups
-    playlist_audio_feature_rollup = utils.normalize_spotify_audio_feats(pl_w_audio_feats_df)
+    st.experimental_memo(ttl=86400)
+    def normalize_spotify_audio_feats(df):
+        if exists('st_support_files/playlist_audio_feature_rollup.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/playlist_audio_feature_rollup.csv'))).days < 1:
+            playlist_audio_feature_rollup = pd.read_csv('st_support_files/playlist_audio_feature_rollup.csv')
+        else:
+            grouped = df.groupby(by=['country'], as_index=False)
+            res = grouped.agg(['sum', 'count'])
+            res.columns = list(map('_'.join, res.columns.values))
+            res = res.reset_index()
+
+            ### Create Spotify audio features normalized for playlist length
+            res = res.drop(columns=['danceability_count', 'energy_count', 'key_count', 'loudness_count', 'mode_count', 'speechiness_count', 'acousticness_count', 'instrumentalness_count', 'liveness_count', 'valence_count', 'tempo_count'])
+            res = res.rename(columns = {'duration_ms_count':'track_count'})
+            res['duration_m'] = res['duration_ms_sum'] / 1000 / 60
+            res['danceability'] = res['danceability_sum'] / res['duration_m']
+            res['energy'] = res['energy_sum'] / res['duration_m']
+            res['key'] = res['key_sum'] / res['duration_m']
+            res['loudness'] = res['loudness_sum'] / res['duration_m']
+            res['mode'] = res['mode_sum'] / res['duration_m']
+            res['speechiness'] = res['speechiness_sum'] / res['duration_m']
+            res['acousticness'] = res['acousticness_sum'] / res['duration_m']
+            res['instrumentalness'] = res['instrumentalness_sum'] / res['duration_m']
+            res['liveness'] = res['liveness_sum'] / res['duration_m']
+            res['valence'] = res['valence_sum'] / res['duration_m']
+            res['tempo'] = res['tempo_sum'] / res['duration_m']
+            res['popularity'] = res['popularity_sum'] / res['duration_m']
+            res['pl_count'] = res['pl_count_sum'] / res['duration_m']
+
+            playlist_audio_feature_rollup = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m', 'cluster_sum','cluster_count', 'popularity_sum','popularity_count'])
+            playlist_audio_feature_rollup.to_csv('st_support_files/playlist_audio_feature_rollup.csv')
+        
+        return playlist_audio_feature_rollup
+    
+    playlist_audio_feature_rollup = normalize_spotify_audio_feats(pl_w_audio_feats_df)
 
 ### Sidebar config stuff
 with st.container():
@@ -41,17 +114,27 @@ with st.container():
     st.write("While the first day of scraping playlists came back with 3,450 total songs, only about half of those were unique. Because of that, we have tons of tracks that show up on multiple playlists. We're looking at a total of 69 daily playlists - 68 country-specific and 1 global - and these songs below show up on multiple different country playlists.")
 
     # st.markdown('---')
-    df = pd.DataFrame(playlist_data_df.groupby(['track_name', 'track_artist','track_id'])['country'].count().sort_values(ascending=False).reset_index()).head()
-    df.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
-    df = df.merge(audio_features_df[['id','album_img','preview_url']], how='inner', left_on='Track ID', right_on='id')
+    st.experimental_memo(ttl=86400)
+    def top3_songs(df):
+        """ df = playlist_data_df"""
+        if exists('st_support_files/top3_songs.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/top3_songs.csv'))).days < 1:
+            top3_songs = pd.read_csv('st_support_files/top3_songs.csv')
+        else:
+            top3_songs = pd.DataFrame(df.groupby(['track_name', 'track_artist','track_id'])['country'].count().sort_values(ascending=False).reset_index()).head(3)
+            top3_songs.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
+            top3_songs = top3_songs.merge(audio_features_df[['id','album_img','preview_url']], how='inner', left_on='Track ID', right_on='id')
+            top3_songs.to_csv('st_support_files/top3_songs.csv')
+        return top3_songs
+
+    top_songs_df = top3_songs(playlist_data_df)
 
     top_songs = st.columns(3)
     for i in range(0,3):
-        top_songs[i].metric(label='Playlist appearances', value=int(df['# Playlist Appearances'][i]))
-        top_songs[i].markdown('**' + df['Artist'][i] + " - " + df['Track Name'][i] + '**')
-        top_songs[i].image(df['album_img'][i])
-        if pd.isna(df['preview_url'][i]) == False:
-            top_songs[i].audio(df['preview_url'][i])
+        top_songs[i].metric(label='Playlist appearances', value=int(top_songs_df['# Playlist Appearances'][i]))
+        top_songs[i].markdown('**' + top_songs_df['Artist'][i] + " - " + top_songs_df['Track Name'][i] + '**')
+        top_songs[i].image(top_songs_df['album_img'][i])
+        if pd.isna(top_songs_df['preview_url'][i]) == False:
+            top_songs[i].audio(top_songs_df['preview_url'][i])
 
 
     st.write("Let's take a look at the audio features computed and captured by Spotify for these three songs.")
@@ -85,27 +168,40 @@ st.markdown('---')
 
 ### Density Plots
 with st.container():
-    feature_names = ['danceability','energy','key','loudness','mode','speechiness','acousticness',
-                    'instrumentalness','liveness','valence','tempo', 'duration_ms', 'country']
+    st.experimental_memo(ttl=86400)
+    def dens_plots():
+        #if exists('st_support_files/altair/dens_chart1.json') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/altair/dens_chart1.json'))).days < 1:
+            #chart1 = alt.Chart.from_json('st_support_files/altair/dens_chart1.json')
+            #chart1 = 'st_support_files/altair/dens_chart1.png'
+        
+        feature_names = ['danceability','energy','key','loudness','mode','speechiness','acousticness',
+                        'instrumentalness','liveness','valence','tempo', 'duration_ms', 'country']
 
-    df_feat = pl_w_audio_feats_df[feature_names]
+        df_feat = pl_w_audio_feats_df[feature_names]
+        
+        charts = []
+        for feat in feature_names:
+
+            charts.append(alt.Chart(df_feat).transform_density(
+                density=feat,
+                groupby=['country']
+            ).mark_line().encode(
+                alt.X('value:Q',title=feat),
+                alt.Y('density:Q'),
+                alt.Color('country:N',legend=None),
+                tooltip='country'
+            ))
+
+        chart1 = charts[0]
+        chart2 = charts[1] 
+        chart3 = charts[3]
+        chart4 = charts[9]
+
+        # if 'dens_charts' not in st.session_state:
+        #     st.session_state['dens_charts'] = charts
+        return chart1, chart2, chart3, chart4
     
-    charts = []
-    for feat in feature_names:
-
-        charts.append(alt.Chart(df_feat).transform_density(
-            density=feat,
-            groupby=['country']
-        ).mark_line().encode(
-            alt.X('value:Q',title=feat),
-            alt.Y('density:Q'),
-            alt.Color('country:N',legend=None),
-            tooltip='country'
-        ))
-
-    charts = [charts[0], charts[1], charts[3], charts[9]]
-    if 'dens_charts' not in st.session_state:
-        st.session_state['dens_charts'] = charts
+    chart1, chart2, chart3, chart4 = dens_plots()
 
     st.header('Density Plots')
     st.write("""Knowing we have 69 playlists makes these visuals not-so-easy to consume, but it seemed worth showing the density plots for a couple of audio features across all countries where each line is a country. 
@@ -113,19 +209,19 @@ with st.container():
 
     col1, col2 = st.columns([1,2])
     col1.markdown('**Danceability** - Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.')
-    col2.altair_chart(st.session_state.dens_charts[0], use_container_width=True)
+    col2.altair_chart(chart1, use_container_width=True)
 
     col1, col2 = st.columns([1,2])
     col1.markdown('**Energy** - Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.')
-    col2.altair_chart(st.session_state.dens_charts[1], use_container_width=True)
+    col2.altair_chart(chart2, use_container_width=True)
 
     col1, col2 = st.columns([1,2])
     col1.markdown('**Loudness** - The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track and are useful for comparing relative loudness of tracks. Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.')
-    col2.altair_chart(st.session_state.dens_charts[2], use_container_width=True)
+    col2.altair_chart(chart3, use_container_width=True)
 
     col1, col2 = st.columns([1,2])
     col1.markdown('**Valence** - A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).')
-    col2.altair_chart(st.session_state.dens_charts[3], use_container_width=True)
+    col2.altair_chart(chart4, use_container_width=True)
 
 st.markdown('---')
 
@@ -135,13 +231,33 @@ with st.container():
     st.write("Some text here about correlations and audio features...")
 
     ### Correlation matrix
-    audio_feat_corr = audio_features_df.drop(columns=['time_signature','update_dttm','name','artist','album_img','preview_url', 'duration_ms'])
-    #audio_feat_corr = audio_feat_corr.loc[:,~audio_feat_corr.columns.isin(['popularity','pl_count'])].corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
-    audio_feat_corr = audio_feat_corr.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
+    st.experimental_memo(ttl=86400)
+    def corr_matrix():
+        if exists('st_support_files/audio_feat_corr.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/audio_feat_corr.csv'))).days < 1:
+            audio_feat_corr = pd.read_csv('st_support_files/audio_feat_corr.csv')
+            audio_feat_corr_ct1 = pd.read_csv('st_support_files/audio_feat_corr_ct1.csv')
+            audio_feat_corr_ct2 = pd.read_csv('st_support_files/audio_feat_corr_ct1.csv')
+        else:
+            audio_feat_corr = audio_features_df.drop(columns=['time_signature','update_dttm','name','artist','album_img','preview_url', 'duration_ms'])
+            audio_feat_corr = audio_feat_corr.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
+            audio_feat_corr.to_csv('st_support_files/audio_feat_corr.csv')
+        
+            audio_feat_corr_ct1 = audio_feat_corr.copy()[(audio_feat_corr['variable 1']!='pl_count') & (audio_feat_corr['variable 1']!='popularity') & (audio_feat_corr['variable 2']!='pl_count') & (audio_feat_corr['variable 2']!='popularity')]
+            audio_feat_corr_ct1['correlation_label'] = audio_feat_corr_ct1['correlation'].map('{:.2f}'.format)
+            audio_feat_corr_ct1.to_csv('st_support_files/audio_feat_corr_ct1.csv')
+        
+            audio_feat_corr_ct2 = audio_feat_corr.copy()[(audio_feat_corr['variable 1']=='pl_count') | (audio_feat_corr['variable 1']=='popularity')]
+            audio_feat_corr_ct2['correlation_label'] = audio_feat_corr_ct2['correlation'].map('{:.2f}'.format)
+            audio_feat_corr_ct2.to_csv('st_support_files/audio_feat_corr_ct2.csv')
+        
+        return audio_feat_corr, audio_feat_corr_ct1, audio_feat_corr_ct2
+    
     st.subheader("Correlation Matrix")
+    #audio_feat_corr = corr_matrix()
+    #audio_feat_corr_ct1 = audio_feat_corr.copy()[(audio_feat_corr['variable 1']!='pl_count') & (audio_feat_corr['variable 1']!='popularity') & (audio_feat_corr['variable 2']!='pl_count') & (audio_feat_corr['variable 2']!='popularity')]
+    #audio_feat_corr_ct1['correlation_label'] = audio_feat_corr_ct1['correlation'].map('{:.2f}'.format)
 
-    audio_feat_corr_ct1 = audio_feat_corr.copy()[(audio_feat_corr['variable 1']!='pl_count') & (audio_feat_corr['variable 1']!='popularity') & (audio_feat_corr['variable 2']!='pl_count') & (audio_feat_corr['variable 2']!='popularity')]
-    audio_feat_corr_ct1['correlation_label'] = audio_feat_corr_ct1['correlation'].map('{:.2f}'.format)
+    audio_feat_corr, audio_feat_corr_ct1, audio_feat_corr_ct2 = corr_matrix()
 
     base = alt.Chart(audio_feat_corr_ct1).encode(
         x='variable 2:O',
@@ -170,14 +286,7 @@ with st.container():
 
     col1, col3, col2 = st.columns([3,1,7])
     col1.write("Now, let's take country out of the equation and have a closer look at the different individual audio features across all distinct tracks.")
-    
-    if 'corr_plot' not in st.session_state:
-        st.session_state['corr_plot'] = cor_plot
-
     col2.altair_chart(st.session_state.corr_plot + text, use_container_width=True)
-
-    audio_feat_corr_ct2 = audio_feat_corr.copy()[(audio_feat_corr['variable 1']=='pl_count') | (audio_feat_corr['variable 1']=='popularity')]
-    audio_feat_corr_ct2['correlation_label'] = audio_feat_corr_ct2['correlation'].map('{:.2f}'.format)
 
     base = alt.Chart(audio_feat_corr_ct2).encode(
         x='variable 2:O',
