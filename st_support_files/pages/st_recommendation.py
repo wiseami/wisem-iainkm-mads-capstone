@@ -61,7 +61,7 @@ def write():
         #### testing search bar idea
         search_term = st.text_input('Search an artist', 'Adele')
 
-        search_term = 'Adele' #only here for testing
+        #search_term = 'Adele' #only here for testing
         search = requests.get(SPOTIFY_BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
         search = search.json()
 
