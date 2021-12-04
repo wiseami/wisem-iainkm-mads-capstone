@@ -32,7 +32,7 @@ def write_page(page):
 def main():
     """Main function of the App"""
     st.sidebar.title("Navigation")
-    selection = st.sidebar.radio("Go to", list(PAGES.keys()))
+    selection = st.sidebar.radio("Pages:", list(PAGES.keys()))
 
     page = PAGES[selection]
 
@@ -42,6 +42,8 @@ def main():
     st.sidebar.info(
         """
         This app was built and maintained by Mike Wise and Iain King-Moore for a capstone project for University of Michigan's Master of Applied Data Science program.
+
+        Check out our [GitHub repo](https://github.com/wiseami/wisem-iainkm-mads-capstone).
         """
     )
 

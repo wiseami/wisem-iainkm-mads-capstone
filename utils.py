@@ -367,7 +367,6 @@ def get_features(file):
     mag = mag.mean()
     tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
 
-
     output = {
               'chroma': [chroma],
               'chroma_cens': [chroma_cens],
@@ -453,3 +452,43 @@ def process_tracks(source_file, end_file, max_rows=0):
     else:
         print('No new tracks to process.')
     print('Feature extraction function complete.')
+
+
+def dedupe(end_file, column):
+    df = pd.read_csv(end_file)
+    og_len = len(df)
+    dupes = og_len - len(df.drop_duplicates(subset=[column], keep='first'))
+    df.drop_duplicates(subset=[column], keep='first', inplace=True, ignore_index=True)
+    df.to_csv(end_file, index=False)
+    print('Dedupe complete. {} duplicates removed.'.format(dupes))
+
+
+def combine_csv(source_file, end_file, column, new_file):
+    df_1 = pd.read_csv(source_file)
+    df_2 = pd.read_csv(end_file)
+    for d in [df_1, df_2]:
+        if 'id' in d.columns.to_list():
+            d.rename(columns={'id':'track_id'}, inplace=True)
+    df_f = df_1.merge(df_2, how='left', on=[column])
+    df_f.to_csv(new_file, index=False)
+    print('Files combined.')
+
+
+def conv_type(end_file):
+    df = pd.read_csv(end_file)
+    col_name = ['chroma', 'chroma_cens', 'mff', 'spectral_centroid',
+                'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness',
+                'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength',
+                'pitch', 'magnitude', 'tempo']
+    for col in col_name:
+        df[col] = [i.strip('array()[]') if not type(i) is float else i for i in df[col]]
+        df[col] = pd.to_numeric(df[col])
+    df.to_csv(end_file, index=False)
+    print('Columns converted to float type.')
+
+
+def get_librosa_features(source_file, end_file, column, final_end_file, max_rows=0):
+    process_tracks(source_file, end_file)
+    dedupe(end_file, column)
+    conv_type(end_file)
+    combine_csv(source_file, end_file, column, final_end_file)
