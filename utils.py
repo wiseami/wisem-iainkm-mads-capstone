@@ -11,6 +11,8 @@ import numpy as np
 import pickle
 from datetime import datetime as dt
 from os.path import exists
+import librosa
+from collections import defaultdict
 
 now = datetime.datetime.now()
 # update_dttm = datetime.datetime.now()
@@ -49,11 +51,11 @@ def load_data():
     if exists('st_support_files/audio_features_df.csv') and exists('st_support_files/pl_w_audio_feats_df.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/audio_features_df.csv'))).days < 1:
         audio_features_df = pd.read_csv('st_support_files/audio_features_df.csv')
         pl_w_audio_feats_df = pd.read_csv('st_support_files/pl_w_audio_feats_df.csv')
-        playlist_data_df = pd.read_csv('playlist_data/2021-11-19.csv')
+        playlist_data_df = pd.read_csv('playlist_data/2021-11-30.csv')
         
     else:
         audio_features_df = pd.read_csv('lookups/track_audio_features.csv')
-        playlist_data_df = pd.read_csv('playlist_data/2021-11-19.csv')
+        playlist_data_df = pd.read_csv('playlist_data/2021-11-30.csv')
 
         pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='right', left_on='track_id', right_on='id')
         pl_w_audio_feats_df['pl_count'] = pl_w_audio_feats_df.groupby('track_id')['country'].transform('size')
@@ -169,21 +171,22 @@ def normalize_spotify_audio_feats_2(df):
 def get_audio_features(feat):
     track_list = dict()
     for track in feat['audio_features']:
-        track_list[track['id']] = {'danceability' : track['danceability'], 
-                                   'energy' : track['energy'],
-                                   'key' : track['key'],
-                                   'loudness' : track['loudness'],
-                                   'mode' : track['mode'],
-                                   'speechiness' : track['speechiness'],
-                                   'acousticness' : track['acousticness'],
-                                   'instrumentalness' : track['instrumentalness'],
-                                   'liveness' : track['liveness'],
-                                   'valence' : track['valence'],
-                                   'tempo' : track['tempo'],
-                                   'duration_ms' : track['duration_ms'],
-                                   'time_signature' : track['time_signature'],
-                                   'update_dttm' : now
-                                  }
+        if track != None:
+            track_list[track['id']] = {'danceability' : track['danceability'], 
+                                    'energy' : track['energy'],
+                                    'key' : track['key'],
+                                    'loudness' : track['loudness'],
+                                    'mode' : track['mode'],
+                                    'speechiness' : track['speechiness'],
+                                    'acousticness' : track['acousticness'],
+                                    'instrumentalness' : track['instrumentalness'],
+                                    'liveness' : track['liveness'],
+                                    'valence' : track['valence'],
+                                    'tempo' : track['tempo'],
+                                    'duration_ms' : track['duration_ms'],
+                                    'time_signature' : track['time_signature'],
+                                    'update_dttm' : now
+                                    }
     
     audio_features_df = pd.DataFrame.from_dict(track_list, orient='index')
     audio_features_df.index.name = 'id'
@@ -196,13 +199,14 @@ def get_audio_features(feat):
 def get_track_info(feat):
     track_list = dict()
     for track in feat['tracks']:
-        track_list[track['id']] = {'name': track['name'],
-                                   'artist': track['artists'][0]['name'],
-                                   'album_img': track['album']['images'][0]['url'],
-                                   #'artist_img': track['artists'][0]['images'][0]['url'],
-                                   'preview_url': track['preview_url'],
-                                   'popularity': track['popularity']
-                                  }
+        if track != None:
+            track_list[track['id']] = {'name': track['name'],
+                                    'artist': track['artists'][0]['name'],
+                                    'album_img': track['album']['images'][0]['url'],
+                                    #'artist_img': track['artists'][0]['images'][0]['url'],
+                                    'preview_url': track['preview_url'],
+                                    'popularity': track['popularity']
+                                    }
     track_info_df = pd.DataFrame.from_dict(track_list, orient='index')
     track_info_df.index.name = 'id'
     track_info_df.reset_index(inplace=True)
@@ -320,3 +324,132 @@ audio_feat_dict = {
             "Tempo":"The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration.",
             "Valence":"A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry)."    
             }
+
+### Librosa Music Features Collection
+def load_tracks(list_file_name):
+    df = pd.read_csv(list_file_name)
+    df = df[df['preview_url'].notna()]
+    df.rename(columns={'id': 'track_id'}, inplace=True)
+    return df
+
+
+def extract_mp3(url, save_folder, file_name):
+    doc = requests.get(url)
+    with open(save_folder+file_name, 'wb') as f:
+        f.write(doc.content)
+
+
+def delete_mp3(file):
+    os.remove(file)
+
+
+# get features from librosa
+def get_features(file):
+    y, sr = librosa.load(file)
+    S = np.abs(librosa.stft(y)) #spectral magnitude
+    onset_env = librosa.onset.onset_strength(y)
+
+    chroma = librosa.feature.chroma_stft(y=y, sr=sr).mean()
+    chroma_cens = librosa.feature.chroma_cens(y=y, sr=sr).mean()
+    mff = librosa.feature.mfcc(y=y, sr=sr).mean()
+    spec_cen = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
+    spec_band = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
+    spec_cont = librosa.feature.spectral_contrast(S=S, sr=sr).mean()
+    spec_flat = librosa.feature.spectral_flatness(y=y).mean()
+    roll = librosa.feature.spectral_rolloff(y).mean()
+    poly = librosa.feature.poly_features(S=S, order=1).mean()
+    ton = librosa.feature.tonnetz(y=librosa.effects.harmonic(y), sr=sr).mean()
+    zcr = librosa.feature.zero_crossing_rate(y).mean()
+
+    onset = onset_env.mean()
+    pitch, mag = librosa.piptrack(y=y, sr=sr)
+    pitch = pitch.mean()
+    mag = mag.mean()
+    tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
+
+
+    output = {
+              'chroma': [chroma],
+              'chroma_cens': [chroma_cens],
+              'mff': [mff],
+              'spectral_centroid': [spec_cen],
+              'spectral_bandwidth': [spec_band],
+              'spectral_contrast': [spec_cont],
+              'spectral_flatness': [spec_flat],
+              'Spectral_Rolloff': [roll],
+              'poly_features': [poly],
+              'tonnetz': [ton],
+              'ZCR': [zcr],
+              'onset_strength': [onset],
+              'pitch': [pitch],
+              'magnitude': [mag],
+              'tempo': [tempo]
+              }
+    return output
+
+def process_tracks(source_file, end_file, max_rows=0):
+    global new, end_df, df_feat
+    features_dict = defaultdict(list)
+    source_df = load_tracks(source_file)
+
+    # handle limiting the number of rows to process for testing purposes
+    if max_rows > 0:
+        source_df = source_df.head(max_rows)
+    else:
+        source_df = source_df
+
+    # handle creating a file if it doesn't already exist
+    if not os.path.isfile(end_file):
+        # global new
+        print('{} does not exist. Creating new file from scratch.'.format(end_file))
+        new = True
+        tracks = source_df
+    else:
+        # global end_df
+        end_df = pd.read_csv(end_file)
+        tracks = source_df[~source_df['track_id'].isin(end_df['track_id'])]
+
+
+
+    if len(tracks) > 0:
+        # global df_feat
+        total = len(tracks)
+        print('{} tracks to process'.format(total))
+        batchsize = 50
+        for i in range(0, total, batchsize):
+            features_dict = defaultdict(list)
+            if i+batchsize > total:
+                batch = tracks.iloc[i: -1]
+            else:
+                batch = tracks.iloc[i: i+batchsize]
+            for num, tup in enumerate(batch.iterrows()):
+                idx, row = tup
+                # print('Processing track {} of {}.'.format(num+1, total))
+                track_id = row.track_id
+                url = row.preview_url
+                audio_folder = 'audio_files/'
+                file_name = str(track_id)+'.mp3'
+                audio_file = audio_folder+file_name
+
+                extract_mp3(url, audio_folder, file_name)
+
+                temp_features = get_features(audio_file)
+
+                features_dict['track_id'].append(track_id)
+                for key, value in temp_features.items():
+                    features_dict[key].append(value)
+
+                delete_mp3(audio_file)
+            df_feat = pd.DataFrame(features_dict)
+
+            if not os.path.isfile(end_file):
+                df_feat.to_csv(end_file, index=False)
+                # return df_feat
+            else:
+                end_df = end_df.append(df_feat, ignore_index=True)
+                end_df.to_csv(end_file, index=False)
+                # return end_df
+            print('Tracks {} through {} finished.'.format(i, i+batchsize))
+    else:
+        print('No new tracks to process.')
+    print('Feature extraction function complete.')
