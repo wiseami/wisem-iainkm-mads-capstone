@@ -6,7 +6,7 @@ def write():
     """Used to write the page in the streamlit_app.py file"""
     
     # Use utils.load_data() to bring in all necessary data
-    file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia = utils.load_data()
+    file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, basic_kmeans_inertia, adv_kmeans_inertia = utils.load_data()
 
     st.title('Spotify Streamlit')
     st.markdown('---')

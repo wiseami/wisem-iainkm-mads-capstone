@@ -10,7 +10,7 @@ def write():
     
     ### Density Plots
     # load necessary data using function
-    file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia = utils.load_data()
+    file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, basic_kmeans_inertia, adv_kmeans_inertia = utils.load_data()
 
     ### Recommendations
     with st.container():

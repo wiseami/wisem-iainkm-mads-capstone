@@ -73,11 +73,12 @@ def load_data():
         pl_w_audio_feats_df.to_csv('st_support_files/pl_w_audio_feats_df.csv', index=False)
     
     global_pl_lookup = pd.read_csv('lookups/global_top_daily_playlists.csv')
-    kmeans_inertia = pd.read_csv('model/kmeans_inertia.csv')
+    basic_kmeans_inertia = pd.read_csv('model/basic_kmeans_inertia.csv')
+    adv_kmeans_inertia = pd.read_csv('model/adv_kmeans_inertia.csv')
 
-    return file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia
+    return file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, basic_kmeans_inertia, adv_kmeans_inertia
 
-file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia = load_data()
+file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, basic_kmeans_inertia, adv_kmeans_inertia = load_data()
 
 st.experimental_memo(ttl=86400)
 def corr_matrix():
