@@ -27,11 +27,13 @@ def write():
             top_songs[i].image(top_songs_df['album_img'][i])
             if pd.isna(top_songs_df['preview_url'][i]) == False:
                 top_songs[i].audio(top_songs_df['preview_url'][i])
+            else:
+                top_songs[i].error('No audio preview available.')
 
         st.write("Let's take a look at the audio features computed and captured by Spotify for these three songs.")
         
         feature_names_to_show = ['artist', 'name','danceability','energy','key','loudness','mode','speechiness','acousticness',
-                        'instrumentalness','liveness','valence','tempo']
+                        'instrumentalness','liveness','valence','tempo_1']
         
         st.table(audio_features_df[0:3][feature_names_to_show])
 
