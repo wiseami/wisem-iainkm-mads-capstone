@@ -44,33 +44,38 @@ def spotify_info():
 
     return headers, market, BASE_URL
 
-@st.experimental_memo(ttl=86400)
+#@st.experimental_memo(ttl=86400)
 def load_data():
     now = dt.now()
     file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
-    if exists('st_support_files/audio_features_df.csv') and exists('st_support_files/pl_w_audio_feats_df.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/audio_features_df.csv'))).days < 1:
-        audio_features_df = pd.read_csv('st_support_files/audio_features_df.csv')
-        pl_w_audio_feats_df = pd.read_csv('st_support_files/pl_w_audio_feats_df.csv')
-        playlist_data_df = pd.read_csv('playlist_data/2021-11-30.csv')
+    if exists('st_support_files/cache/audio_features_df.csv') and exists('st_support_files/cache/pl_w_audio_feats_df.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/cache/audio_features_df.csv'))).days < 1:
+        audio_features_df = pd.read_csv('st_support_files/cache/audio_features_df.csv')
+        pl_w_audio_feats_df = pd.read_csv('st_support_files/cache/pl_w_audio_feats_df.csv')
+        playlist_data_df = pd.read_csv('st_support_files/cache/all_pls.csv')
+        #playlist_data_df = pd.read_csv('playlist_data/2021-11-30.csv')
         
     else:
-        audio_features_df = pd.read_csv('lookups/track_audio_features.csv')
-        playlist_data_df = pd.read_csv('playlist_data/2021-11-30.csv')
+        # audio_features_df = pd.read_csv('lookups/track_audio_features.csv')
+        audio_features_df = pd.read_csv('lookups/all_track_audio_features.csv')
+        playlist_data_df = pd.read_csv('playlist_data/playlist_data.csv')
+        
+        playlist_data_df = playlist_data_df[['country', 'track_id']].drop_duplicates()
+        playlist_data_df.to_csv('st_support_files/cache/all_pls.csv', index=False)
 
-        pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='right', left_on='track_id', right_on='id')
+        pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='right', on='track_id').drop_duplicates()
         pl_w_audio_feats_df['pl_count'] = pl_w_audio_feats_df.groupby('track_id')['country'].transform('size')
 
-        audio_feat_cols = ['id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity','cluster', 'pl_count']
+        audio_feat_cols = ['track_id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo_1','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity','basic_kmeans_cluster', 'pl_count', 'adv_kmeans_cluster', 'chroma', 'chroma_cens', 'mff', 'pectral_centroid', 'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness', 'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo_2']
         audio_features_df = pl_w_audio_feats_df.copy().reset_index(drop=True)
         audio_features_df.drop(audio_features_df.columns.difference(audio_feat_cols), 1, inplace=True)
-        audio_features_df.drop_duplicates(subset=['id'], inplace=True)
+        audio_features_df.drop_duplicates(subset=['track_id'], inplace=True)
         audio_features_df.reset_index(inplace=True, drop=True)
 
-        pl_w_audio_feats_df = pl_w_audio_feats_df.drop(columns=['market','capture_dttm','track_preview_url','track_duration', 'id', 'track_added_date', 'track_popularity', 'track_number','time_signature', 'track_artist','track_name','track_id','name','artist','album_img','preview_url','update_dttm'])
+        pl_w_audio_feats_df = pl_w_audio_feats_df.drop(columns=['track_id', 'time_signature', 'track_id','name','artist','album_img','preview_url','update_dttm'])
         pl_w_audio_feats_df = pl_w_audio_feats_df.dropna(how='any', subset=['country']).reset_index(drop=True)
 
-        audio_features_df.to_csv('st_support_files/audio_features_df.csv', index=False)
-        pl_w_audio_feats_df.to_csv('st_support_files/pl_w_audio_feats_df.csv', index=False)
+        audio_features_df.to_csv('st_support_files/cache/audio_features_df.csv', index=False)
+        pl_w_audio_feats_df.to_csv('st_support_files/cache/pl_w_audio_feats_df.csv', index=False)
     
     global_pl_lookup = pd.read_csv('lookups/global_top_daily_playlists.csv')
     basic_kmeans_inertia = pd.read_csv('model/basic_kmeans_inertia.csv')
@@ -80,13 +85,13 @@ def load_data():
 
 file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, basic_kmeans_inertia, adv_kmeans_inertia = load_data()
 
-st.experimental_memo(ttl=86400)
-def corr_matrix():
+#st.experimental_memo(ttl=86400)
+def corr_matrix(country=None):
     #file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, kmeans_inertia = load_data()
     if exists('st_support_files/cache/audio_feat_corr.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/cache/audio_feat_corr.csv'))).days < 1:
         audio_feat_corr = pd.read_csv('st_support_files/cache/audio_feat_corr.csv')
         audio_feat_corr_ct1 = pd.read_csv('st_support_files/cache/audio_feat_corr_ct1.csv')
-        audio_feat_corr_ct2 = pd.read_csv('st_support_files/cache/audio_feat_corr_ct1.csv')
+        audio_feat_corr_ct2 = pd.read_csv('st_support_files/cache/audio_feat_corr_ct2.csv')
     else:
         audio_feat_corr = audio_features_df.drop(columns=['time_signature','update_dttm','name','artist','album_img','preview_url', 'duration_ms'])
         audio_feat_corr = audio_feat_corr.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
@@ -102,7 +107,7 @@ def corr_matrix():
     
     return audio_feat_corr, audio_feat_corr_ct1, audio_feat_corr_ct2
 
-st.experimental_memo(ttl=86400)
+#st.experimental_memo(ttl=86400)
 def normalize_spotify_audio_feats(df):
     if exists('st_support_files/cache/playlist_audio_feature_rollup.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/cache/playlist_audio_feature_rollup.csv'))).days < 1:
         playlist_audio_feature_rollup = pd.read_csv('st_support_files/cache/playlist_audio_feature_rollup.csv')
@@ -135,15 +140,15 @@ def normalize_spotify_audio_feats(df):
     
     return playlist_audio_feature_rollup
 
-st.experimental_memo(ttl=86400)
+#st.experimental_memo(ttl=86400)
 def top3_songs(df):
     """ df = playlist_data_df"""
     if exists('st_support_files/cache/top3_songs.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/cache/top3_songs.csv'))).days < 1:
         top3_songs = pd.read_csv('st_support_files/cache/top3_songs.csv')
     else:
-        top3_songs = pd.DataFrame(df.groupby(['track_name', 'track_artist','track_id'])['country'].count().sort_values(ascending=False).reset_index()).head(3)
+        top3_songs = pd.DataFrame(df.groupby(['track_name', 'track_artist','track_id'])['country'].nunique().sort_values(ascending=False).reset_index()).head(3)
         top3_songs.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
-        top3_songs = top3_songs.merge(audio_features_df[['id','album_img','preview_url']], how='inner', left_on='Track ID', right_on='id')
+        top3_songs = top3_songs.merge(audio_features_df[['track_id','album_img','preview_url']], how='inner', left_on='Track ID', right_on='track_id')
         top3_songs.to_csv('st_support_files/cache/top3_songs.csv', index=False)
     return top3_songs
 
