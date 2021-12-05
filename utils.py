@@ -146,9 +146,9 @@ def top3_songs(df):
     if exists('st_support_files/cache/top3_songs.csv') and (now - dt.fromtimestamp(os.path.getmtime('st_support_files/cache/top3_songs.csv'))).days < 1:
         top3_songs = pd.read_csv('st_support_files/cache/top3_songs.csv')
     else:
-        top3_songs = pd.DataFrame(df.groupby(['track_name', 'track_artist','track_id'])['country'].nunique().sort_values(ascending=False).reset_index()).head(3)
-        top3_songs.columns = ['Track Name', 'Artist', 'Track ID', '# Playlist Appearances']
-        top3_songs = top3_songs.merge(audio_features_df[['track_id','album_img','preview_url']], how='inner', left_on='Track ID', right_on='track_id')
+        top3_songs = pd.DataFrame(df.groupby(['track_id'])['country'].nunique().sort_values(ascending=False).reset_index()).head(3)
+        top3_songs = top3_songs.merge(audio_features_df[['track_id','artist','name','album_img','preview_url']], how='inner', on='track_id')
+        top3_songs.columns = ['Track ID', '# Playlist Appearances', 'Artist', 'Track Name', 'album_img','preview_url']
         top3_songs.to_csv('st_support_files/cache/top3_songs.csv', index=False)
     return top3_songs
 

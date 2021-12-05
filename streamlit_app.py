@@ -4,6 +4,8 @@ import st_support_files.pages.st_density
 import st_support_files.pages.st_correlations
 import st_support_files.pages.st_kmeans
 import st_support_files.pages.st_recommendation
+import st_support_files.pages.st_density_choose
+import st_support_files.pages.st_correlations_choose
 
 ### Start building out Streamlit assets
 st.set_page_config(
@@ -15,7 +17,9 @@ st.set_page_config(
 PAGES = {
     "Home/Intro": st_support_files.pages.st_home,
     "Density Plots": st_support_files.pages.st_density,
+    "Choose Your Own Density Plot": st_support_files.pages.st_density_choose,
     "Correlations": st_support_files.pages.st_correlations,
+    "Choose Your Own Correlations": st_support_files.pages.st_correlations_choose,
     "KMeans": st_support_files.pages.st_kmeans,
     "Recommendation": st_support_files.pages.st_recommendation
 }
@@ -38,6 +42,7 @@ def main():
 
     with st.spinner(f"Loading {selection} ..."):
         write_page(page)
+
     st.sidebar.title("About")
     st.sidebar.info(
         """
