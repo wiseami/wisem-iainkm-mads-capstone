@@ -48,10 +48,14 @@ def write():
             color=alt.Color('correlation:Q', scale=alt.Scale(scheme='greenblue'))
         )
 
-        #col1, col3, col2 = st.columns([3,1,7])
         st.write("Now, let's take country out of the equation and have a closer look at the different individual audio features across all distinct tracks.")
         st.altair_chart(cor_plot1 + text, use_container_width=True)
 
+    ### Popularity features correlation
+    st.subheader("Popularity Correlation Matrix")
+    with st.container():
+        st.write("But how do these audio features correlate with popularity features?")
+        
         base = alt.Chart(audio_feat_corr_ct2).encode(
             x='variable 2:O',
             y='variable 1:O'    
@@ -76,11 +80,7 @@ def write():
         cor_plot2 = base.mark_rect().encode(
             color=alt.Color('correlation:Q', scale=alt.Scale(scheme='orangered'))
         )
-
-    ### Popularity features correlation
-    st.subheader("Popularity Correlation Matrix")
-    with st.container():
-        st.write("But how do these audio features correlate with popularity features?")
+        
         st.altair_chart(cor_plot2 + text, use_container_width=True)
         st.write("Interesting to see that neither popularity (a Spotify measure) or playlist count (number of distinct market playlists a song shows up on) correlate very highly with any specific audio feature.")
         st.text("\n")

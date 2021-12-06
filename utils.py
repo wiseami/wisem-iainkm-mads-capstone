@@ -267,16 +267,28 @@ def kmeans_k_tuning_plots(k_min, k_max, inertia, silhouette):
 
 def do_kmeans_on_fly(track_df):
     X = track_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'popularity'])
-    scaler = pickle.load(open("model/scaler.pkl", "rb"))
-    data_scaled = scaler.transform(X)
+    basic_scaler = pickle.load(open("model/basic_scaler.pkl", "rb"))
+    data_scaled = basic_scaler.transform(X)
     X_scaled = pd.DataFrame(data_scaled)
 
-    kmeans = pickle.load(open("model/kmeans.pkl", "rb"))
-    clusters = kmeans.predict(X_scaled)
+    basic_kmeans = pickle.load(open("model/basic_kmeans.pkl", "rb"))
+    clusters = basic_kmeans.predict(X_scaled)
     audio_features_df_clustered = track_df.copy()
-    audio_features_df_clustered["cluster"] = clusters
+    audio_features_df_clustered["basic_kmeans_cluster"] = clusters
     return audio_features_df_clustered
 
+
+# def do_kmeans_advanced_on_fly(track_df):
+#     X = track_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'popularity'])
+#     basic_scaler = pickle.load(open("model/adv_scaler.pkl", "rb"))
+#     data_scaled = basic_scaler.transform(X)
+#     X_scaled = pd.DataFrame(data_scaled)
+
+#     basic_kmeans = pickle.load(open("model/adv_kmeans.pkl", "rb"))
+#     clusters = basic_kmeans.predict(X_scaled)
+#     audio_features_df_clustered = track_df.copy()
+#     audio_features_df_clustered["adv_kmeans_cluster"] = clusters
+#     return audio_features_df_clustered
 
 
 # takes in dfs to do cossim on the fly
