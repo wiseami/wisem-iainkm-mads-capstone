@@ -2,7 +2,6 @@ import requests
 import pandas as pd
 import datetime
 import os
-import sys
 import json
 
 with open('credentials.json') as creds:
