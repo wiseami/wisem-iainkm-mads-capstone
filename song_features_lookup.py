@@ -1,19 +1,16 @@
 import requests
 import pandas as pd
-import os
 import utils
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import pickle
 
+# Load Spotify API info
 headers, market, BASE_URL = utils.spotify_info()
 
 # Read in our csv lookup with all 69 Daily Song Charts
-file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
-
 playlist_scrape_lookup = pd.read_csv('playlist_data/playlist_data.csv')
 playlist_lookup = pd.read_csv('lookups/global_top_daily_playlists.csv')
-
 unique_tracks = playlist_scrape_lookup['track_id'].unique().tolist()
 existing_audio_features_lookup = pd.read_csv('lookups/track_audio_features.csv')
 unique_tracks = [i for i in unique_tracks if i not in existing_audio_features_lookup['track_id'].tolist()]
@@ -102,23 +99,3 @@ if len(full_audio_feats) > 0:
     adv_audio_features_df_clustered = adv_audio_features_df_clustered[adv_audio_features_df_clustered['spectral_contrast'].notna()]
     adv_audio_features_df_clustered["adv_kmeans_cluster"] = adv_clusters
     adv_audio_features_df_clustered.to_csv('lookups/all_track_audio_features.csv', index=False)
-    
-
-
-# # For visualizing silhouette scores
-# from yellowbrick.cluster import SilhouetteVisualizer
-# import matplotlib.pyplot as plt
-
-# fig, ax = plt.subplots(6, 2, figsize=(24,24))
-# for i in [2, 3, 4, 5, 6,7,8,9,10,11,12]:
-#     '''
-#     Create KMeans instance for different number of clusters
-#     '''
-#     km = KMeans(n_clusters=i, init='k-means++', n_init=10, max_iter=100, random_state=42)
-#     q, mod = divmod(i, 2)
-#     '''
-#     Create SilhouetteVisualizer instance with KMeans instance
-#     Fit the visualizer
-#     '''
-#     visualizer = SilhouetteVisualizer(km, colors='yellowbrick', ax=ax[q-1][mod])
-#     visualizer.fit(X_scaled)

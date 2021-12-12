@@ -1,31 +1,17 @@
 import requests
 import pandas as pd
-import json
 from os.path import exists
 from collections import Counter
+import utils
+
+"""This script finds all the unique genres from our overall track list
+   and since Spotify stores them at very granular levels, attempts to
+   create higher-level aggregates
+"""
 
 if not exists('EDA\genres_list.csv'):
     # Setup for Spotify API
-    with open('credentials.json') as creds:
-        credentials = json.load(creds)
-
-    AUTH_URL = 'https://accounts.spotify.com/api/token'
-
-    auth_response = requests.post(AUTH_URL, {
-        'grant_type': 'client_credentials',
-        'client_id': credentials['CLIENT_ID'],
-        'client_secret': credentials['CLIENT_SECRET'],
-    })
-
-    auth_response_data = auth_response.json()
-    access_token = auth_response_data['access_token']
-
-    headers = {
-        'Authorization': 'Bearer {token}'.format(token=access_token)
-    }
-
-    # base URL of all Spotify API endpoints
-    BASE_URL = 'https://api.spotify.com/v1/'
+    headers, market, BASE_URL = utils.spotify_info()
 
     tracks = pd.read_csv('./lookups/all_track_audio_features.csv')
     tracks = tracks['track_id'].to_list()

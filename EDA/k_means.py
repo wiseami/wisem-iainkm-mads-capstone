@@ -5,8 +5,12 @@ from sklearn.decomposition import PCA
 import numpy as np
 import matplotlib.pyplot as plt
 import utils
-import pickle
 
+"""This script was built specifically to assist in visualizing KMeans
+   clusters using PCA at different cluster values
+"""
+
+# Load in full audio features data
 full_audio_feats = pd.read_csv('lookups/full_audio_features.csv')
 
 X = full_audio_feats.drop(columns=['track_id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'popularity'])
@@ -24,6 +28,7 @@ X_scaled = pd.DataFrame(data_scaled)
 basic_kmeans = KMeans(n_clusters=10, n_init=30, max_iter=500)
 basic_kmeans.fit(X_scaled)
 
+# Use PCA to reduce dimensionality for visualization purposes
 pca = PCA(n_components=2)
 df = pca.fit_transform(X_scaled)
 
@@ -68,6 +73,7 @@ X_adv_scaled = pd.DataFrame(adv_data_scaled)
 adv_kmeans = KMeans(n_clusters=11, n_init=30, max_iter=500)
 adv_kmeans.fit(X_adv_scaled)
 
+# Use PCA to reduce dimensionality for visualization purposes
 pca = PCA(2)
 df = pca.fit_transform(X_adv_scaled)
 

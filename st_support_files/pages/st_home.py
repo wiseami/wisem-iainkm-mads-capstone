@@ -2,13 +2,15 @@ import pandas as pd
 import streamlit as st
 import utils
 
+"""This builds out the home/intro page of the Streamlit app"""
+
 def write():
     """Used to write the page in the streamlit_app.py file"""
     
     # Use utils.load_data() to bring in all necessary data
     file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, basic_kmeans_inertia, adv_kmeans_inertia = utils.load_data()
 
-    st.title('Spotify Streamlit')
+    st.title('Music Affinity Across Geographical Boundaries')
     st.markdown('---')
 
     ### Top 3 song based on pl appearance

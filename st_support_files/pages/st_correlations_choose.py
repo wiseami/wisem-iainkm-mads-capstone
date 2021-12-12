@@ -3,8 +3,7 @@ import altair as alt
 import utils
 from datetime import datetime as dt
 
-
-### Start building out Streamlit assets
+"""This builds out the 'Choose your own correlations' page in the Streamlit app"""
 
 now = dt.now()
 def write():
@@ -65,7 +64,6 @@ def write():
         #choice=['global']
         if choice:
             choice_df = pl_w_audio_feats_df[pl_w_audio_feats_df['country'].isin(choice)]
-            #choice_df = utils.normalize_spotify_audio_feats_2(choice_df)
             audio_feat_corr = choice_df.corr().stack().reset_index().rename(columns={0: 'correlation', 'level_0': 'variable 1', 'level_1': 'variable 2'})
 
             audio_feat_corr_ct2 = audio_feat_corr.copy()[audio_feat_corr['variable 1']=='popularity']

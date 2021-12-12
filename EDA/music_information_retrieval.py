@@ -1,15 +1,12 @@
 # The purpose of this script is to extract additional features from track previews for
-# future analysis and modelling
+# future analysis and modeling
 
 import pandas as pd
 import requests
 import librosa
-from tqdm import tqdm
 import os
 from collections import defaultdict
 import numpy as np
-
-
 
 def load_tracks(list_file_name):
     df = pd.read_csv(list_file_name)

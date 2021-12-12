@@ -4,6 +4,8 @@ import requests
 import utils
 from sklearn.metrics.pairwise import cosine_similarity
 
+"""This builds out the Recommendations page in the Streamlit app"""
+
 def write():
     """Used to write the page in the streamlit_app.py file"""
     # Spotify info
@@ -47,7 +49,7 @@ def write():
 
                             final_df = audio_features_df_new.merge(track_info_df, how='inner', on='id')
                             final_df.rename(columns={'id':'track_id'}, inplace=True)
-                            final_df.to_csv('audio_files/df.csv', index=False)
+                            #final_df.to_csv('audio_files/df.csv', index=False)
                             st.write('Features pulled from API:')
                             st.dataframe(final_df[feats_to_show_streamlit])
 

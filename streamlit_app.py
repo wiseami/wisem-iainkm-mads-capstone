@@ -1,8 +1,5 @@
 import streamlit as st
 import st_support_files.pages.st_home
-import st_support_files.pages.st_density
-import st_support_files.pages.st_correlations
-import st_support_files.pages.st_kmeans
 import st_support_files.pages.st_recommendation
 import st_support_files.pages.st_density_choose
 import st_support_files.pages.st_correlations_choose
@@ -16,11 +13,8 @@ st.set_page_config(
 ### Define pages for navigation
 PAGES = {
     "Home/Intro": st_support_files.pages.st_home,
-    #"Density Plots": st_support_files.pages.st_density,
     "Choose Your Own Density Plot": st_support_files.pages.st_density_choose,
-    #"Correlations": st_support_files.pages.st_correlations,
     "Choose Your Own Correlations": st_support_files.pages.st_correlations_choose,
-    #"KMeans": st_support_files.pages.st_kmeans,
     "Recommendation": st_support_files.pages.st_recommendation
 }
 
@@ -32,6 +26,7 @@ def write_page(page):
         page {module} -- A module with a 'def write():' function
     """
     page.write()
+
 
 def main():
     """Main function of the App"""
@@ -51,6 +46,7 @@ def main():
         Check out our [GitHub repo](https://github.com/wiseami/wisem-iainkm-mads-capstone).
         """
     )
+
 
 if __name__ == "__main__":
     main()
