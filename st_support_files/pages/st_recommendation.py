@@ -20,7 +20,7 @@ def write():
 
         search_term = st.text_input('Search an artist')
 
-        search_term = 'johnny cash' #only here for testing
+        #search_term = 'johnny cash' #only here for testing
         search = requests.get(SPOTIFY_BASE_URL + 'search?q=artist:' + search_term + '&type=artist', headers=headers)
         search = search.json()
 
