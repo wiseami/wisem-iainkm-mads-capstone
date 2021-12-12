@@ -8,7 +8,7 @@ Make sure when registering your app, you note down your CLIENT_ID and CLIENT_SEC
 
 ## Streamlit
 
-Remember the CLIENT_ID and CLIENT_SECRET you were supposed to record? In order to utilize some of the live API call functionality of the Streamlit app, plug those values into the ```secrets.toml``` file in the /.streamlit directory.
+Remember the CLIENT_ID and CLIENT_SECRET you were supposed to record? In order to utilize some of the live API call functionality of the Streamlit app, plug those values into the ```secrets.toml``` file in the ```/.streamlit``` directory.
 ```
 [spotify_credentials]
 CLIENT_ID = "your_client_id_here"

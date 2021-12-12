@@ -3,31 +3,10 @@ import pandas as pd
 import datetime
 import os
 import json
+import utils
 
-with open('credentials.json') as creds:
-    credentials = json.load(creds)
-
-AUTH_URL = 'https://accounts.spotify.com/api/token'
-
-auth_response = requests.post(AUTH_URL, {
-    'grant_type': 'client_credentials',
-    'client_id': credentials['CLIENT_ID'],
-    'client_secret': credentials['CLIENT_SECRET'],
-})
-
-auth_response_data = auth_response.json()
-
-access_token = auth_response_data['access_token']
-
-headers = {
-    'Authorization': 'Bearer {token}'.format(token=access_token)
-}
-
-# only for testing purposes. NEed to remove this later
-market = '?market=US'
-
-# base URL of all Spotify API endpoints
-BASE_URL = 'https://api.spotify.com/v1/'
+# Import Spotify info
+headers, market, BASE_URL = utils.spotify_info()
 
 # Read in our csv lookup with all 69 Daily Song Charts
 file_path = os.path.dirname(os.path.abspath(__file__)) + '\\'

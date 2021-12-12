@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 import numpy as np
 import matplotlib.pyplot as plt
 import utils
+import pickle
 
 full_audio_feats = pd.read_csv('lookups/full_audio_features.csv')
 
@@ -15,7 +16,7 @@ if 'advanced_kmeans_cluster' in X.columns:
     X.drop(columns=['advanced_kmeans_cluster'], inplace=True)
 
 ## Basic KMeans Clustering - Using only Spotify features
-X_small = X.drop(columns=['chroma', 'chroma_cens', 'mff', 'spectral_centroid', 'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness', 'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo'])
+X_small = X.drop(columns=['chroma', 'chroma_cens', 'mff', 'spectral_centroid', 'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness', 'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo_2'])
 basic_scaler = StandardScaler().fit(X_small)
 data_scaled = basic_scaler.transform(X_small)
 X_scaled = pd.DataFrame(data_scaled)
@@ -23,7 +24,7 @@ X_scaled = pd.DataFrame(data_scaled)
 basic_kmeans = KMeans(n_clusters=10, n_init=30, max_iter=500)
 basic_kmeans.fit(X_scaled)
 
-pca = PCA(n_components=.95)
+pca = PCA(n_components=2)
 df = pca.fit_transform(X_scaled)
 
 label = basic_kmeans.fit_predict(df)
@@ -40,7 +41,7 @@ plt.show()
 basic_k_scores = utils.kmeans_k_tuning(X_scaled, 2, 16)
 
 ### Loop for plotting PCA-reduced data
-for i in np.arange(1, 13, 1):
+for i in np.arange(1, 15, 1):
     basic_kmeans = KMeans(n_clusters=i, n_init=30, max_iter=500)
     basic_kmeans.fit(X_scaled)
 
@@ -89,7 +90,7 @@ adv_scaler = StandardScaler().fit(X_adv)
 adv_data_scaled = adv_scaler.transform(X_adv)
 X_adv_scaled = pd.DataFrame(adv_data_scaled)
 
-for i in np.arange(1, 20, 1):
+for i in np.arange(1, 15, 1):
     adv_kmeans = KMeans(n_clusters=i, n_init=30, max_iter=500)
     adv_kmeans.fit(X_adv_scaled)
 

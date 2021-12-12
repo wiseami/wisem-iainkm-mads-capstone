@@ -36,7 +36,6 @@ def write():
                         'instrumentalness','liveness','valence','tempo_1']
         
         st.table(audio_features_df[0:3][feature_names_to_show])
-
         with st.expander("Source Code"):
             st.code("""
 with st.container():
@@ -58,7 +57,7 @@ with st.container():
     st.write("Let's take a look at the audio features computed and captured by Spotify for these three songs.")
     
     feature_names_to_show = ['artist', 'name','danceability','energy','key','loudness','mode','speechiness','acousticness',
-                    'instrumentalness','liveness','valence','tempo']
+                    'instrumentalness','liveness','valence','tempo_1']
     
     st.table(audio_features_df[0:3][feature_names_to_show])
         """)

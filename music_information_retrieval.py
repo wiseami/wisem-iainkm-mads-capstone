@@ -68,7 +68,7 @@ def get_features(file):
               'onset_strength': [onset],
               'pitch': [pitch],
               'magnitude': [mag],
-              'tempo': [tempo]
+              'tempo_2': [tempo]
               }
     return output
 

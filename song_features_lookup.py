@@ -1,40 +1,12 @@
 import requests
 import pandas as pd
-import datetime
 import os
-from os.path import exists
-import time
-import json
-import itertools
 import utils
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 import pickle
 
-with open('credentials.json') as creds:
-    credentials = json.load(creds)
-
-AUTH_URL = 'https://accounts.spotify.com/api/token'
-
-auth_response = requests.post(AUTH_URL, {
-    'grant_type': 'client_credentials',
-    'client_id': credentials['CLIENT_ID'],
-    'client_secret': credentials['CLIENT_SECRET'],
-})
-
-auth_response_data = auth_response.json()
-
-access_token = auth_response_data['access_token']
-
-headers = {
-    'Authorization': 'Bearer {token}'.format(token=access_token)
-}
-
-# only for testing purposes. NEed to remove this later
-market = '?market=US'
-
-# base URL of all Spotify API endpoints
-BASE_URL = 'https://api.spotify.com/v1/'
+headers, market, BASE_URL = utils.spotify_info()
 
 # Read in our csv lookup with all 69 Daily Song Charts
 file_path = os.path.dirname(os.path.abspath(__file__)) + '/'
@@ -53,7 +25,7 @@ def split(input_list, batch_size):
 
 batch_size = 49
 unique_tracks_for_api = list(split(unique_tracks, batch_size))
-final_df = pd.DataFrame(columns=['id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity'])
+final_df = pd.DataFrame(columns=['id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo_1','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity'])
 
 # Pull audio features using track dict and write/append to file
 for track_id_list in unique_tracks_for_api:
@@ -85,7 +57,7 @@ if len(full_audio_feats) > 0:
     if 'advanced_kmeans_cluster' in X.columns:
         X.drop(columns=['advanced_kmeans_cluster'], inplace=True)
 
-    X_small = X.drop(columns=['chroma', 'chroma_cens', 'mff', 'spectral_centroid', 'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness', 'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo'])
+    X_small = X.drop(columns=['chroma', 'chroma_cens', 'mff', 'spectral_centroid', 'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness', 'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo_2'])
     basic_scaler = StandardScaler().fit(X_small)
     data_scaled = basic_scaler.transform(X_small)
     X_scaled = pd.DataFrame(data_scaled)
@@ -93,7 +65,7 @@ if len(full_audio_feats) > 0:
     basic_k_scores = utils.kmeans_k_tuning(X_scaled, 2, 16)
     basic_k_scores.to_csv('model/basic_kmeans_inertia.csv', index=False)
 
-    basic_kmeans = KMeans(n_clusters=10) # 7 clusters was best as of 12/4/2021
+    basic_kmeans = KMeans(n_clusters=10, n_init=30, max_iter=500)
     basic_kmeans.fit(X_scaled)
 
     # dump models to pickles for later use
@@ -108,7 +80,7 @@ if len(full_audio_feats) > 0:
     adv_k_scores = utils.kmeans_k_tuning(X_adv_scaled, 2, 16)
     adv_k_scores.to_csv('model/adv_kmeans_inertia.csv', index=False)
 
-    adv_kmeans = KMeans(n_clusters=8) # 8 clusters was best as of 12/4/2021
+    adv_kmeans = KMeans(n_clusters=11, n_init=30, max_iter=500)
     adv_kmeans.fit(X_adv_scaled)
 
     # dump models to pickles for later use

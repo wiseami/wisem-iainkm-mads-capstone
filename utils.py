@@ -18,9 +18,6 @@ now = datetime.datetime.now()
 # update_dttm = datetime.datetime.now()
 
 def spotify_info():
-    # with open('credentials.json') as creds:
-    #    credentials = json.load(creds)
-
     # Spotify token auth url
     AUTH_URL = 'https://accounts.spotify.com/api/token'
     
@@ -65,7 +62,7 @@ def load_data():
         pl_w_audio_feats_df = playlist_data_df.merge(audio_features_df, how='right', on='track_id').drop_duplicates()
         pl_w_audio_feats_df['pl_count'] = pl_w_audio_feats_df.groupby('track_id')['country'].transform('size')
 
-        audio_feat_cols = ['track_id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo_1','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity','basic_kmeans_cluster', 'pl_count', 'adv_kmeans_cluster', 'chroma', 'chroma_cens', 'mff', 'pectral_centroid', 'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness', 'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo_2']
+        audio_feat_cols = ['track_id','danceability','energy','key','loudness','mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo_1','duration_ms','time_signature','update_dttm','name','artist','album_img','preview_url','popularity','basic_kmeans_cluster', 'pl_count', 'adv_kmeans_cluster', 'chroma', 'chroma_cens', 'mff', 'spectral_centroid', 'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness', 'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo_2']
         audio_features_df = pl_w_audio_feats_df.copy().reset_index(drop=True)
         audio_features_df.drop(audio_features_df.columns.difference(audio_feat_cols), 1, inplace=True)
         audio_features_df.drop_duplicates(subset=['track_id'], inplace=True)
@@ -76,7 +73,7 @@ def load_data():
 
         audio_features_df.to_csv('st_support_files/cache/audio_features_df.csv', index=False)
         pl_w_audio_feats_df.to_csv('st_support_files/cache/pl_w_audio_feats_df.csv', index=False)
-    
+        
     global_pl_lookup = pd.read_csv('lookups/global_top_daily_playlists.csv')
     basic_kmeans_inertia = pd.read_csv('model/basic_kmeans_inertia.csv')
     adv_kmeans_inertia = pd.read_csv('model/adv_kmeans_inertia.csv')
@@ -118,7 +115,7 @@ def normalize_spotify_audio_feats(df):
         res = res.reset_index()
 
         ### Create Spotify audio features normalized for playlist length
-        res = res.drop(columns=['danceability_count', 'energy_count', 'key_count', 'loudness_count', 'mode_count', 'speechiness_count', 'acousticness_count', 'instrumentalness_count', 'liveness_count', 'valence_count', 'tempo_count'])
+        res = res.drop(columns=['danceability_count', 'energy_count', 'key_count', 'loudness_count', 'mode_count', 'speechiness_count', 'acousticness_count', 'instrumentalness_count', 'liveness_count', 'valence_count', 'tempo_1_count'])
         res = res.rename(columns = {'duration_ms_count':'track_count'})
         res['duration_m'] = res['duration_ms_sum'] / 1000 / 60
         res['danceability'] = res['danceability_sum'] / res['duration_m']
@@ -131,11 +128,11 @@ def normalize_spotify_audio_feats(df):
         res['instrumentalness'] = res['instrumentalness_sum'] / res['duration_m']
         res['liveness'] = res['liveness_sum'] / res['duration_m']
         res['valence'] = res['valence_sum'] / res['duration_m']
-        res['tempo'] = res['tempo_sum'] / res['duration_m']
+        res['tempo_1'] = res['tempo_1_sum'] / res['duration_m']
         res['popularity'] = res['popularity_sum'] / res['duration_m']
         res['pl_count'] = res['pl_count_sum'] / res['duration_m']
 
-        playlist_audio_feature_rollup = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_sum', 'duration_ms_sum', 'track_count','duration_m', 'cluster_sum','cluster_count', 'popularity_sum','popularity_count'])
+        playlist_audio_feature_rollup = res.drop(columns=['danceability_sum', 'energy_sum', 'key_sum', 'loudness_sum', 'mode_sum', 'speechiness_sum', 'acousticness_sum', 'instrumentalness_sum', 'liveness_sum', 'valence_sum', 'tempo_1_sum', 'duration_ms_sum', 'track_count','duration_m', 'cluster_sum','cluster_count', 'popularity_sum','popularity_count'])
         playlist_audio_feature_rollup.to_csv('st_support_files/cache/playlist_audio_feature_rollup.csv', index=False)
     
     return playlist_audio_feature_rollup
@@ -166,7 +163,7 @@ def normalize_spotify_audio_feats_2(df):
     df['instrumentalness'] = df['instrumentalness'] / df['duration_m']
     df['liveness'] = df['liveness'] / df['duration_m']
     df['valence'] = df['valence'] / df['duration_m']
-    df['tempo'] = df['tempo'] / df['duration_m']
+    df['tempo_1'] = df['tempo_1'] / df['duration_m']
     df['popularity'] = df['popularity'] / df['duration_m']
     df['pl_count'] = df['pl_count'] / df['duration_m']
     playlist_audio_feature_rollup = df.drop(columns=['duration_ms','duration_m','cluster'])
@@ -188,7 +185,7 @@ def get_audio_features(feat):
                                     'instrumentalness' : track['instrumentalness'],
                                     'liveness' : track['liveness'],
                                     'valence' : track['valence'],
-                                    'tempo' : track['tempo'],
+                                    'tempo_1' : track['tempo'],
                                     'duration_ms' : track['duration_ms'],
                                     'time_signature' : track['time_signature'],
                                     'update_dttm' : now
@@ -266,7 +263,7 @@ def kmeans_k_tuning_plots(k_min, k_max, inertia, silhouette):
     return inertia
 
 def do_kmeans_on_fly(track_df):
-    X = track_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'popularity'])
+    X = track_df.drop(columns=['track_id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'popularity'])
     basic_scaler = pickle.load(open("model/basic_scaler.pkl", "rb"))
     data_scaled = basic_scaler.transform(X)
     X_scaled = pd.DataFrame(data_scaled)
@@ -276,20 +273,6 @@ def do_kmeans_on_fly(track_df):
     audio_features_df_clustered = track_df.copy()
     audio_features_df_clustered["basic_kmeans_cluster"] = clusters
     return audio_features_df_clustered
-
-
-# def do_kmeans_advanced_on_fly(track_df):
-#     X = track_df.drop(columns=['id','duration_ms','update_dttm','time_signature','name','artist','album_img','preview_url', 'popularity'])
-#     basic_scaler = pickle.load(open("model/adv_scaler.pkl", "rb"))
-#     data_scaled = basic_scaler.transform(X)
-#     X_scaled = pd.DataFrame(data_scaled)
-
-#     basic_kmeans = pickle.load(open("model/adv_kmeans.pkl", "rb"))
-#     clusters = basic_kmeans.predict(X_scaled)
-#     audio_features_df_clustered = track_df.copy()
-#     audio_features_df_clustered["adv_kmeans_cluster"] = clusters
-#     return audio_features_df_clustered
-
 
 # takes in dfs to do cossim on the fly
 def create_cossim_df(df, res, global_lookup):
@@ -311,9 +294,9 @@ def create_cossim_df(df, res, global_lookup):
     cossim_df['instrumentalness'] = cossim_df['instrumentalness'] / cossim_df['duration_m']
     cossim_df['liveness'] = cossim_df['liveness'] / cossim_df['duration_m']
     cossim_df['valence'] = cossim_df['valence'] / cossim_df['duration_m']
-    cossim_df['tempo'] = cossim_df['tempo'] / cossim_df['duration_m']
+    cossim_df['tempo_1'] = cossim_df['tempo_1'] / cossim_df['duration_m']
 
-    compare = cossim_df.drop(columns=['id','duration_ms','tempo', 'duration_m']).iloc[0].values
+    compare = cossim_df.drop(columns=['id','duration_ms','tempo_1', 'duration_m']).iloc[0].values
 
     cossim_df = cossim_df.merge(df[['id', 'name', 'artist','album_img','preview_url']], how='inner', on='id')
     cossim_df = cossim_df.drop_duplicates(subset=['name']).reset_index(drop=True)
@@ -400,7 +383,7 @@ def get_features(file):
               'onset_strength': [onset],
               'pitch': [pitch],
               'magnitude': [mag],
-              'tempo': [tempo]
+              'tempo_2': [tempo]
               }
     return output
 
@@ -497,7 +480,7 @@ def conv_type(end_file):
     col_name = ['chroma', 'chroma_cens', 'mff', 'spectral_centroid',
                 'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness',
                 'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength',
-                'pitch', 'magnitude', 'tempo']
+                'pitch', 'magnitude', 'tempo_2']
     for col in col_name:
         df[col] = [i.strip('array()[]') if not type(i) is float else i for i in df[col]]
         df[col] = pd.to_numeric(df[col])
@@ -510,3 +493,50 @@ def get_librosa_features(source_file, end_file, column, final_end_file, max_rows
     dedupe(end_file, column)
     conv_type(end_file)
     combine_csv(source_file, end_file, column, final_end_file)
+
+
+
+def do_kmeans_advanced_on_fly(track_df):
+    track_df = pd.read_csv('audio_files/df.csv')
+    if not pd.isna(track_df['preview_url'][0]):
+        extract_mp3(track_df['preview_url'][0], 'audio_files/', track_df['track_id'][0]+'.mp3')
+        track_dict = get_features('audio_files/'+track_df['track_id'][0]+'.mp3')
+        delete_mp3('audio_files/'+track_df['track_id'][0]+'.mp3')
+        for k,v in track_dict.items():
+            track_dict[k] = v[0]
+        track_dict['tempo_2'] = track_dict['tempo_2'][0]
+        track_dict['track_id'] = track_df['track_id'][0]
+        track_adv_df = pd.DataFrame([track_dict])
+        track_df_final = track_df.merge(track_adv_df, on = 'track_id')
+
+        #X = track_df_final.drop(columns=['track_id','duration_ms','update_dttm', 'time_signature', 'name','artist','album_img','preview_url', 'popularity'])
+        X = track_df_final[['danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness',
+       'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo_1',
+       'chroma', 'chroma_cens', 'mff', 'spectral_centroid',
+       'spectral_bandwidth', 'spectral_contrast', 'spectral_flatness',
+       'Spectral_Rolloff', 'poly_features', 'tonnetz', 'ZCR', 'onset_strength',
+       'pitch', 'magnitude', 'tempo_2']]
+        adv_scaler = pickle.load(open("model/adv_scaler.pkl", "rb"))
+        data_scaled = adv_scaler.transform(X)
+        X_scaled = pd.DataFrame(data_scaled)
+
+        adv_kmeans = pickle.load(open("model/adv_kmeans.pkl", "rb"))
+        clusters = adv_kmeans.predict(X_scaled)
+        audio_features_df_clustered = track_df_final.copy()
+        audio_features_df_clustered["adv_kmeans_cluster"] = clusters
+        return audio_features_df_clustered
+
+    else:
+        return None
+        
+
+
+
+# def extract_mp3(url, save_folder, file_name):
+#     doc = requests.get(url)
+#     with open(save_folder+file_name, 'wb') as f:
+#         f.write(doc.content)
+
+
+# def delete_mp3(file):
+#     os.remove(file)
