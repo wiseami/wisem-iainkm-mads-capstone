@@ -49,8 +49,8 @@ def write():
                 ), use_container_width=True)
 
         else:
-            st.markdown('')
-            st.error('Pick at least one country!')
+            col1.markdown('')
+            col1.error('Pick at least one country!')
     
     ### Audio features definitions expander
     with st.container():
