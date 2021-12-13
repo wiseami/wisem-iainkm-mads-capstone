@@ -7,12 +7,14 @@ import st_support_files.pages.st_correlations_choose
 ### Start building out Streamlit assets
 st.set_page_config(
     layout = "wide",
-    menu_items = {'About':"Capstone project for University of Michigan's Master of Applied Data Science program by Mike Wise and Iain King-Moore"}
+    menu_items = {'About':"Capstone project for University of Michigan's Master of Applied Data Science program by Mike Wise and Iain King-Moore"},
+    page_title = 'Music Affinity Across Geographical Boundaries',
+    initial_sidebar_state = 'expanded'
     )
 
 ### Define pages for navigation
 PAGES = {
-    "Home/Intro": st_support_files.pages.st_home,
+    "Home": st_support_files.pages.st_home,
     "Choose Your Own Density Plot": st_support_files.pages.st_density_choose,
     "Choose Your Own Correlations": st_support_files.pages.st_correlations_choose,
     "Recommendation": st_support_files.pages.st_recommendation

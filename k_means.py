@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import utils
 
 """This script was built specifically to assist in visualizing KMeans
-   clusters using PCA at different cluster values
+clusters using PCA at different cluster values
 """
 
 # Load in full audio features data

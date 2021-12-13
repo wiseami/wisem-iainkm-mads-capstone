@@ -15,6 +15,7 @@ EDA/audio
 .idea
 .streamlit/secrets.toml
 batch_files/
+*.pptx
 
 # C extensions
 *.so

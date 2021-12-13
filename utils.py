@@ -463,5 +463,19 @@ audio_feat_dict = {
             "Mode":"Mode indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. Major is represented by 1 and minor is 0.",
             "Speechiness":"Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks.",
             "Tempo":"The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration.",
-            "Valence":"A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry)."    
+            "Valence":"A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).",
+            "Chroma":"An element of pitch, chroma features correlate closely to harmony and are often used in chord recognition, music alignment/synchronization, and song identification.",
+            "Chroma CENS":"A variant of Chroma, Chroma Energy Normalized (CENS) also correlates closely to harmony but incorporates additional normalization steps in its derivation that make it more robust to dynamic, timber, and articulation.",
+            "MFF":"Mel-Frequency Cepstral Coefficients are a set of features that describe the overall shape of a song's spectral envelope and are often used to describe timbre.",
+            "Spectral Centroid":"Indicates where the center is of a song along a spectrogram and is often associated with the brightness of a song.",
+            "Spectral Bandwidth":"The variance from the spectral centroid which has correlation to timbre.",
+            "Spectral Contrast":"The difference between peaks and valleys in a song’s spectrogram. ",
+            "Spectral Flatness":"A measure of how tone-like or noise-like a song is.",
+            "Spectral Rolloff":"The frequency below which 85% of the spectral energy lies.",
+            "Poly Features":"The coefficients of fitting an nth-order polynomial to the columns of a spectrogram. In our implementation, a linear polynomial was used.",
+            "Tonnetz":"Tonnetz is an n-dimensional mesh that maps the tonal relationships of a song, which is another way of representing harmonic relationships.",
+            "Zero Crossing Rate":"The rate at which a signal changes from positive to negative and vice versa, which is representative of percussive sounds.",
+            "Onset Strength":"Method of measuring the onset of notes.",
+            "Pitch":"Pitch of a song. How the human ear hears and understands the frequency of a sound wave.",
+            "Magnitude":"b"
             }
