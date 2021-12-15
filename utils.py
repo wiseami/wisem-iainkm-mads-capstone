@@ -5,6 +5,7 @@ import os
 import streamlit as st
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
@@ -451,6 +452,91 @@ def do_kmeans_advanced_on_fly(track_df):
         return None
 
 
+def Recommendizer(final_df):
+    if pd.isna(final_df['preview_url'][0]):
+        #BASIC KMEANS
+        bas_final_df = do_kmeans_on_fly(final_df)
+
+        pl_feat_merge = playlist_data_df.merge(audio_features_df, how='inner', on='track_id')
+        clusters_by_country = pl_feat_merge.groupby(['country', 'basic_kmeans_cluster'])['track_id'].count().sort_values(ascending=False).reset_index()
+
+        # gets songs from top playlist with most number of songs in the same cluster
+        tops = clusters_by_country[clusters_by_country['basic_kmeans_cluster']==bas_final_df['basic_kmeans_cluster'].item()].sort_values(by='track_id', ascending=False)[0:1]
+        top_pl_track_ids = playlist_data_df[playlist_data_df['country'] == tops['country'].item()]['track_id']
+
+        cossim_df = audio_features_df[audio_features_df['track_id'].isin(top_pl_track_ids)]
+        cossim_df = cossim_df[spot_feats]
+        cossim_df_y = cossim_df['track_id']
+        cossim_df = cossim_df.drop(columns=['track_id'])
+
+        compare_df = bas_final_df.copy()
+        compare_df = compare_df[spot_feats]
+        compare_df_y = compare_df['track_id']
+        compare_df = compare_df.drop(columns=['track_id'])
+
+        cossim_df_f = cossim_df.copy()[compare_df.columns.tolist()]
+
+        basic_scaler = pickle.load(open("model/basic_scaler.pkl", "rb"))
+        scaled_cossim = basic_scaler.transform(cossim_df_f)
+        scaled_compare = basic_scaler.transform(compare_df)
+
+        cossim_df_f['basic_sim'] = cosine_similarity(scaled_cossim, scaled_compare)
+
+        #cossim_df_f['basic_sim'] = cossim_df_f.apply(lambda x: cosine_similarity(compare_df.values.reshape(1,-1), x.values.reshape(1,-1))[0][0], axis=1)
+        cossim_df_f['track_id'] = cossim_df_y
+        cossim_df_f = cossim_df_f[cossim_df_f['basic_sim'] < 1]
+        cossim_df_sort = cossim_df_f.sort_values('basic_sim',ascending=False)[0:5]
+        cossim_df_sort = cossim_df_sort.merge(audio_features_df[['track_id','name','artist','album_img','preview_url']], how='inner', on='track_id')
+
+        compare_df['track_id'] = compare_df_y
+        compare_df = compare_df.merge(bas_final_df[['track_id','name','artist','album_img','preview_url']], how='inner', on='track_id')
+
+        final_playlist = global_pl_lookup[global_pl_lookup['country']==tops['country'].item()]
+    
+    else:
+        #ADV KMEANS
+        adv_df = do_kmeans_advanced_on_fly(final_df)
+        pl_feat_merge = playlist_data_df.merge(audio_features_df, how='inner', on='track_id')
+        clusters_by_country = pl_feat_merge.groupby(['country', 'adv_kmeans_cluster'])['track_id'].count().sort_values(ascending=False).reset_index()
+        
+        tops = clusters_by_country[clusters_by_country['adv_kmeans_cluster']==adv_df['adv_kmeans_cluster'].item()].sort_values(by='track_id', ascending=False)[0:1]
+        top_pl_track_ids = playlist_data_df[playlist_data_df['country'] == tops['country'].item()]['track_id']
+        
+        cossim_df = audio_features_df[audio_features_df['track_id'].isin(top_pl_track_ids)]
+        cossim_df = cossim_df[feats_to_keep]
+        cossim_df_y = cossim_df['track_id']
+        cossim_df = cossim_df.drop(columns=['track_id'])
+
+        compare_df = adv_df.copy()
+        compare_df = compare_df[feats_to_keep]
+        compare_df_y = compare_df['track_id']
+        compare_df = compare_df.drop(columns=['track_id'])
+
+        cossim_df_f = cossim_df.copy()[compare_df.columns.tolist()]
+
+        adv_scaler = pickle.load(open("model/adv_scaler.pkl", "rb"))
+        scaled_cossim = adv_scaler.transform(cossim_df_f)
+        scaled_compare = adv_scaler.transform(compare_df)
+
+        cossim_df_f['adv_sim'] = cosine_similarity(scaled_cossim, scaled_compare)
+
+        #cossim_df_f['adv_sim'] = cossim_df_f.apply(lambda x: cosine_similarity(compare_df.values.reshape(1,-1), x.values.reshape(1,-1))[0][0], axis=1)
+        cossim_df_f['track_id'] = cossim_df_y
+        cossim_df_f = cossim_df_f[cossim_df_f['adv_sim'] < 1]
+        cossim_df_sort = cossim_df_f.sort_values('adv_sim',ascending=False)[0:5]
+        cossim_df_sort = cossim_df_sort.merge(audio_features_df[['track_id','name','artist','album_img','preview_url']], how='inner', on='track_id')
+
+        compare_df['track_id'] = compare_df_y
+        compare_df = compare_df.merge(adv_df[['track_id','name','artist','album_img','preview_url']], how='inner', on='track_id')
+
+        final_playlist = global_pl_lookup[global_pl_lookup['country']==tops['country'].item()]
+
+    return compare_df, final_playlist, cossim_df_sort
+
+        
+
+
+
 """Dictionaries used elsewhere"""
 audio_feat_dict = {
             "Acousticness":"A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic.",
@@ -479,3 +565,19 @@ audio_feat_dict = {
             "Pitch":"Pitch of a song. How the human ear hears and understands the frequency of a sound wave.",
             "Magnitude":"b"
             }
+
+spot_feats = ['track_id','danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness',
+                'acousticness', 'instrumentalness', 'liveness', 'valence',
+                'tempo_1']
+
+lib_feats = ['chroma',
+    'chroma_cens', 'mff', 'spectral_bandwidth', 'spectral_contrast',
+    'spectral_flatness', 'Spectral_Rolloff', 'poly_features',
+    'tonnetz', 'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo_2']
+
+feats_to_keep = ['track_id', 'danceability', 'energy', 'key', 'loudness', 'mode','speechiness', 'acousticness', 'instrumentalness', 'liveness','valence', 'tempo_1', 'chroma', 
+                        'chroma_cens', 'mff', 'spectral_centroid', 'spectral_bandwidth','spectral_contrast', 'spectral_flatness', 'Spectral_Rolloff','poly_features', 'tonnetz', 
+                        'ZCR', 'onset_strength', 'pitch','magnitude', 'tempo_2']
+
+feats_to_show_streamlit = ['artist', 'name','danceability','energy','key','loudness','mode','speechiness','acousticness',
+            'instrumentalness','liveness','valence', 'album_img','preview_url']
