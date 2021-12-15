@@ -104,12 +104,10 @@ def write():
         col1.text("\n")
 
     ### Audio features definitions expander
-    with st.container():
-        with st.expander("Audio feature definitions"):
-            for k in utils.audio_feat_dict:
-                st.markdown('**' + k +'** - ' + utils.audio_feat_dict[k])
-            col1,col2 = st.columns([3,1])
-            col2.markdown("Source: [Spotify's API documentation.](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-audio-features)")
+    with col1.expander("Audio feature definitions", expanded=False):
+        for k in utils.audio_feat_dict:
+            st.markdown('**' + k +'** - ' + utils.audio_feat_dict[k])
+        st.markdown("Source: [Spotify's API documentation.](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-audio-features)")
 
 if __name__ == "__main__":
     write()

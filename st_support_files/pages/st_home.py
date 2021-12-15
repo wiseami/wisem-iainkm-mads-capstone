@@ -42,7 +42,7 @@ def write():
                 top_songs[i].audio(top_songs_df['preview_url'][i])
             else:
                 top_songs[i].error('No audio preview available.')
-
+        st.write("")
         st.write("Below are the audio features computed and captured by Spotify for these three songs.")
         
         spot_feature_names_to_show = ['artist', 'name','danceability','energy','key','loudness','mode','speechiness','acousticness',

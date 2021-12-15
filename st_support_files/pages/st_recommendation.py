@@ -97,6 +97,7 @@ def write():
                     col1.subheader("If you like...")
                     col1.markdown("*" + compare_df['name'].iloc[0] + "* by " + compare_df['artist'].iloc[0])
                     col1.image(compare_df['album_img'].iloc[0])
+                    st.write("")
                     components.iframe('https://open.spotify.com/embed/track/' + compare_df['track_id'].iloc[0], height=75)
 
                 with col2:
@@ -104,18 +105,44 @@ def write():
                     st.markdown(final_playlist['name'].item())
                     st.image(final_playlist['playlist_img'].item())
                     #st.write("Top 5 closest matching songs in this playlist")
+                    st.write("")
                     for x in cossim_df_sort[feats_to_show_streamlit].index:
                         components.iframe('https://open.spotify.com/embed/track/' + cossim_df_sort['track_id'].iloc[x], height=75)
                     st.write("")
                     st.write("")
-                    st.write("Not so much? Check out the rest of the playlist.")
+                    st.write("Those top 5 not work out so well? Check out the rest of the playlist.")
                     components.iframe('https://open.spotify.com/embed/playlist/' + final_playlist['id'].iloc[0], height = 500)
             
             except:
                 pass
 
-    with st.expander("How does this work?"):
-        st.write("""[summarize how this works]""")
+    with st.expander("How does this work?", expanded=False):
+        st.markdown("""**1.** When you search for an artist or song, this runs a live lookup using Spotify's API search endpoint and will bring
+                    back the top 5 results. The top 5 results return as buttons and when you click one, you set off a chain of events.
+
+**2.** We do a lookup against the track list we pulled down as a part of this project. Chances are low you'll
+happen to search for one of those 2,500ish, but if we don't need to do more API lookups, then we won't. If we don't
+have it, it'll run a search against the audio features lookup to pull down the Spotify audio features for
+that song.
+
+**3a.** The song does not have a 30 second preview. In this case, we load up a clustering model pickle fit only on
+Spotify audio features, as these are available for all songs.
+
+**3b** The song *does* have a 30 second preview. Here, we pull in the Spotify audio features, but we also download the
+mp3, run it through Librosa to pull out a few more features, and then use a clustering model pickle that was fit
+using both sets of features.
+
+**4.** After we've assigned a cluster to the song you looked up, we then search all of our market-specific playlists
+to find the ones with the most songs in that same cluster.
+
+**5.** Once we've picked the country-specific playlist to recommend, we also use cosine simlarity to take the
+searched song's audio features and find the top 5 songs in the suggested playlist that are most similar to your 
+searched song.
+
+**6.** You're returned an embedded player for your searched song, which will play a 30 second preview unless you click through and log into
+your Spotify account. You're also given previews for the previously mentioned top 5 songs. After that, you'll also see all 50 songs
+that are currently in that market's top playlist.
+        """)
 
 if __name__ == "__main__":
     write()

@@ -562,8 +562,8 @@ audio_feat_dict = {
             "Tonnetz":"Tonnetz is an n-dimensional mesh that maps the tonal relationships of a song, which is another way of representing harmonic relationships.",
             "Zero Crossing Rate":"The rate at which a signal changes from positive to negative and vice versa, which is representative of percussive sounds.",
             "Onset Strength":"Method of measuring the onset of notes.",
-            "Pitch":"Pitch of a song. How the human ear hears and understands the frequency of a sound wave.",
-            "Magnitude":"b"
+            "Pitch":"Pitch of a song. How the human ear hears and understands the frequency of a sound wave."
+            #"Magnitude":""
             }
 
 spot_feats = ['track_id','danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness',
