@@ -50,7 +50,7 @@ streamlit run streamlit_app.py
 
 Good work! Now you can navigate to [http://localhost:8501/](http://localhost:8501/) and see the app for yourself, assuming you didn't change the default port.
 
-### Streamlit Cloud
+## Streamlit Cloud
 Check out our already published app hosted in Streamlit Cloud!\
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/wiseami/wisem-iainkm-mads-capstone/main/)
 
