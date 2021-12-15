@@ -50,14 +50,12 @@ streamlit run streamlit_app.py
 
 Good work! Now you can navigate to [http://localhost:8501/](http://localhost:8501/) and see the app for yourself, assuming you didn't change the default port.
 
-
-
+### Streamlit Cloud
 Check out our already published app hosted in Streamlit Cloud!\
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/wiseami/wisem-iainkm-mads-capstone/main/)
 
+\
 
-
-## Data Flow
-![Data Flow Doc] (https://github.com/wiseami/wisem-iainkm-mads-capstone/blob/main/assets/data_flow.pdf?raw=true)
-
-![Data Flow Doc] (https://github.com/wiseami/wisem-iainkm-mads-capstone/blob/main/assets/data_flow.png?raw=true)
+# Data Flow
+To get an idea of what the scripts in this repo are used for, below is a snapshot of the data flow. Some ran daily and some were either used once after our data collection was complete to find additional audio features or for analysis. 
+![Data Flow Doc](https://github.com/wiseami/wisem-iainkm-mads-capstone/blob/main/assets/data_flow.png?raw=true)
