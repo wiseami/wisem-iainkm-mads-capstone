@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ```
 
 # Recommendation Engine Quick Start
-Beyond the data analysis aspect of this repository, one of the key features is a music recommendation engine utilizing Spotify's API. Once launched, you're able to search for any artist, pick one of their top 5 songs and get back a recommended Daily Top 50 playlists from somewhere in the world that likely aligns with your choice.
+Beyond the data analysis aspect of this repository, one of the key features is a music recommendation engine utilizing Spotify's API. Once launched, you're able to search for any artist or song and get back a recommended Daily Top 50 playlists from somewhere in the world that likely aligns with your choice.
 
 ## Spotify API Setup
 
@@ -43,11 +43,12 @@ CLIENT_ID = "your_client_id_here"
 CLIENT_SECRET = "your_client_secret_here"
 ```
 
-Once you have Streamlit installed and your ```secrets.toml``` file setup, navigate to this root directory and start this up locally.
+Once you have Streamlit installed and your ```secrets.toml``` file setup, navigate to this root directory and start it up locally.
 ```
 streamlit run streamlit_app.py
 ```
 
+Good work! Now you can navigate to [http://localhost:8501/](http://localhost:8501/) and see the app for yourself, assuming you didn't change the default port.
 
 
 
