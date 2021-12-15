@@ -54,7 +54,6 @@ Good work! Now you can navigate to [http://localhost:8501/](http://localhost:850
 Check out our already published app hosted in Streamlit Cloud!\
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/wiseami/wisem-iainkm-mads-capstone/main/)
 
-\
 
 # Data Flow
 To get an idea of what the scripts in this repo are used for, below is a snapshot of the data flow. Some ran daily and some were either used once after our data collection was complete to find additional audio features or for analysis. 
