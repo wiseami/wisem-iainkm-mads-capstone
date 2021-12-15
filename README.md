@@ -1,5 +1,5 @@
 # Music Affinity Across Geographical Boundaries
-Capstone project for University of Michigan's Master of Applied Data Science program by Mike Wise and Iain King-Moore utilizing data pulled using Spotify's API to understand audio feature sameness across the world.
+Capstone project for University of Michigan's Master of Applied Data Science program by Mike Wise and Iain King-Moore utilizing data pulled using Spotify's API to understand audio feature comparisons across the world.
 
 
 # Getting Started
@@ -54,3 +54,8 @@ Good work! Now you can navigate to [http://localhost:8501/](http://localhost:850
 
 Check out our already published app hosted in Streamlit Cloud!\
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/wiseami/wisem-iainkm-mads-capstone/main/)
+
+
+
+## Data Flow
+![Data Flow Doc](https://github.com/wiseami/wisem-iainkm-mads-capstone/blob/main/data_flow.pdf)
