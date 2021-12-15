@@ -58,4 +58,6 @@ Check out our already published app hosted in Streamlit Cloud!\
 
 
 ## Data Flow
-![Data Flow Doc](https://github.com/wiseami/wisem-iainkm-mads-capstone/blob/main/data_flow.pdf)
+![Data Flow Doc] (https://github.com/wiseami/wisem-iainkm-mads-capstone/blob/main/assets/data_flow.pdf?raw=true)
+
+![Data Flow Doc] (https://github.com/wiseami/wisem-iainkm-mads-capstone/blob/main/assets/data_flow.png?raw=true)
