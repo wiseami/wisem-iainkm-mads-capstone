@@ -6,6 +6,8 @@ import streamlit as st
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
@@ -13,6 +15,7 @@ from datetime import datetime as dt
 from os.path import exists
 import librosa
 from collections import defaultdict
+
 
 now = datetime.datetime.now()
 # update_dttm = datetime.datetime.now()
@@ -534,7 +537,67 @@ def Recommendizer(final_df):
     return compare_df, final_playlist, cossim_df_sort
 
         
+def country_clusters():
+    if exists('st_support_files/cache/country_clusters.csv'):
+        final = pd.read_csv('st_support_files/cache/country_clusters.csv')
+    else:
+        file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, basic_kmeans_inertia, adv_kmeans_inertia = load_data()
 
+        audio_features_df.dropna(axis=0, inplace=True)
+
+        features = ['danceability', 'energy', 'key', 'loudness', 'mode',
+            'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+            'valence', 'tempo_1', 'time_signature', 'chroma', 'chroma_cens', 'mff',
+            'spectral_centroid', 'spectral_bandwidth', 'spectral_contrast',
+            'spectral_flatness', 'Spectral_Rolloff', 'poly_features', 'tonnetz',
+            'ZCR', 'onset_strength', 'pitch', 'magnitude', 'tempo_2']
+
+        playlist_data_df = pd.read_csv('playlist_data/playlist_data.csv')
+        playlist_data_df['unique_id'] = playlist_data_df.country + '-' + playlist_data_df.track_id
+        playlist_data_df = playlist_data_df.drop_duplicates(subset=['unique_id'])
+        playlist_data_df = playlist_data_df[['country', 'market', 'track_artist','track_name','track_id']]
+        playlist_data_df = playlist_data_df[playlist_data_df.country != 'global']
+
+        c_feat = {}
+
+        for ctry in playlist_data_df.country.tolist():
+            tracks = playlist_data_df[playlist_data_df['country']==ctry].track_id.tolist()
+            df_temp = audio_features_df[audio_features_df.track_id.isin(tracks)]
+            c_feat[ctry] = df_temp[features].mean(axis=0).tolist()
+            
+        df_ctry_feat = pd.DataFrame.from_dict(c_feat, orient='index', columns=features)
+
+        scaler = StandardScaler()
+        X = df_ctry_feat.drop(columns=['tempo_1'])
+        X = scaler.fit_transform(X)
+        inert = []
+        sil = []
+        axis = []
+
+        for i, n in enumerate(range(2,21)):
+            n_clusters = n
+            kmean = KMeans(n_clusters=n_clusters, init='k-means++')
+            cluster_labels = kmean.fit_predict(X)
+            inert.append(kmean.inertia_)
+            axis.append(n)
+            sil.append(silhouette_score(X,cluster_labels))
+
+
+        kmean = KMeans(n_clusters=6, init='k-means++')
+        cluster_labels = kmean.fit_predict(X)
+        centers = kmean.cluster_centers_
+
+        num_components=3
+        pca = PCA(n_components=num_components)
+        p_comps = pca.fit_transform(X)
+        final=None
+        cols = ['PC{}'.format(i+1) for i in range(num_components) ]
+        final = pd.DataFrame(p_comps, columns=cols)
+        final['country'] = df_ctry_feat.index
+        final['cluster'] = cluster_labels
+        final.to_csv('st_support_files/cache/country_clusters.csv')
+
+    return final
 
 
 """Dictionaries used elsewhere"""

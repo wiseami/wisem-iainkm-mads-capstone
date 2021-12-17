@@ -21,7 +21,7 @@ def write():
                     popular.
                 """)
 
-        st.write("If you want more information on how we used this data to analyze music across the world, check out our [Medium](link) post.")
+        #st.write("If you want more information on how we used this data to analyze music across the world, check out our [Medium](link) post.")
     
     ### Top 3 song based on pl appearance
     with st.container():

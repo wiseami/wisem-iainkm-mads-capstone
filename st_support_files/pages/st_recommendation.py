@@ -118,18 +118,18 @@ def write():
 
     with st.expander("How does this work?", expanded=False):
         st.markdown("""**1.** When you search for an artist or song, this runs a live lookup using Spotify's API search endpoint and will bring
-                    back the top 5 results. The top 5 results return as buttons and when you click one, you set off a chain of events.
+                    back the top 5 results. Those results return as buttons and when you click one, you set off a chain of events.
 
-**2.** We do a lookup against the track list we pulled down as a part of this project. Chances are low you'll
-happen to search for one of those 2,500ish, but if we don't need to do more API lookups, then we won't. If we don't
+**2.** We do a lookup against the track list we pulled down as a part of this project. Chances are low that you'll
+happen to search for one of those 2,500ish songs, but if we don't need to do more API lookups, then we won't. If we don't
 have it, it'll run a search against the audio features lookup to pull down the Spotify audio features for
 that song.
 
-**3a.** The song does not have a 30 second preview. In this case, we load up a clustering model pickle fit only on
+**3a.** If the song does not have a 30 second preview, we load up a clustering model pickle fit only on
 Spotify audio features, as these are available for all songs.
 
-**3b** The song *does* have a 30 second preview. Here, we pull in the Spotify audio features, but we also download the
-mp3, run it through Librosa to pull out a few more features, and then use a clustering model pickle that was fit
+**3b** If there song *does* have a 30 second preview, we pull in the Spotify audio features, but we also download the
+preview to an mp3, run it through Librosa to pull out a few more features, and then use a clustering model pickle that was fit
 using both sets of features.
 
 **4.** After we've assigned a cluster to the song you looked up, we then search all of our market-specific playlists

@@ -10,10 +10,10 @@ def write():
     # load necessary data using function
     file_path, audio_features_df, playlist_data_df, global_pl_lookup, pl_w_audio_feats_df, basic_kmeans_inertia, adv_kmeans_inertia = utils.load_data()
     
-    
+    st.title("Data Distribution via Density Plot")
+    st.markdown('---')
     
     with st.container():
-        st.title("Data Distribution via Density Plot")
         st.write("""One way to quickly see how the data is distrubted across markets is to take the audio features for each
                     individual song, roll those up to the country and plot said distribution. By default, this opens with
                     all 69 lists selected.""")
@@ -51,7 +51,14 @@ def write():
         else:
             col1.markdown('')
             col1.error('Pick at least one country!')
-    
+        col1.write("")
+        col1.write("""It comes down to what feature you choose, but what you'll see is that there are some features where almost all markets are the
+                    same and there are some features that are all over the map. This gives us a good idea that not all popular music in different
+                    countries have the same audio features.
+        """)
+        col1.write("")
+        col1.write("")
+
     ### Audio features definitions expander
     with col1.expander("Audio feature definitions", expanded=False):
         for k in utils.audio_feat_dict:

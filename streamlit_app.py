@@ -3,6 +3,7 @@ import st_support_files.pages.st_home
 import st_support_files.pages.st_recommendation
 import st_support_files.pages.st_density_choose
 import st_support_files.pages.st_correlations_choose
+import st_support_files.pages.st_country_clusters
 
 ### Start building out Streamlit assets
 st.set_page_config(
@@ -17,6 +18,7 @@ PAGES = {
     "Home": st_support_files.pages.st_home,
     "Choose Your Own Density Plot": st_support_files.pages.st_density_choose,
     "Choose Your Own Correlations": st_support_files.pages.st_correlations_choose,
+    "Clustering": st_support_files.pages.st_country_clusters,
     "Recommendation": st_support_files.pages.st_recommendation
 }
 
