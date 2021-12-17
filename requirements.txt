@@ -2,6 +2,7 @@ librosa==0.8.1
 matplotlib==3.4.3
 numpy==1.21.4
 pandas==1.2.3
+plotly==4.14.2
 requests==2.26.0
 scikit_learn==1.0.1
 streamlit==1.2.0
